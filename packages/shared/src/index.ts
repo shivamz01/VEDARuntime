@@ -135,7 +135,6 @@ const OPTIONAL_HANDOFF_KEYS = ['workflow_id'] as const;
 type _AssertAllKeysListed = keyof HandoffJSON_v611 extends 
   typeof REQUIRED_HANDOFF_KEYS[number] | typeof OPTIONAL_HANDOFF_KEYS[number] 
   ? true : never;
-// @ts-ignore - Verification only
 const _check: _AssertAllKeysListed = true;
 
 const ALLOWED_HANDOFF_KEYS = new Set<string>([
@@ -365,10 +364,17 @@ function validateGovernance(value: unknown, errors: string[]): void {
 }
 
 function canonicalize(value: unknown): unknown {
-  // M2: Normalize null to undefined (omitted) for HMAC stability
+  // M2: Normalize null/undefined to undefined for object fields (which are then omitted)
   if (value === null || value === undefined) return undefined;
   if (typeof value !== 'object') return value;
-  if (Array.isArray(value)) return value.map(canonicalize).filter(v => v !== undefined);
+  
+  // NEW: Arrays preserve structure but canonicalize their contents
+  if (Array.isArray(value)) {
+    return value.map(v => {
+      const canonical = canonicalize(v);
+      return canonical === undefined ? null : canonical;
+    });
+  }
 
   const sorted: Record<string, unknown> = {};
   const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));

@@ -272,6 +272,7 @@ For Free Edition local use, the runtime evaluates these gates internally. You de
 | Signature verification fails | `SIGNATURE_INVALID` |
 | HMAC verification fails | `HMAC_INVALID` |
 | `DATA_STATUS` missing or invalid | `DATA_STATUS_MISSING` / `DATA_STATUS_INVALID` |
+| `phase` missing or invalid | `PHASE_MISSING` / `PHASE_INVALID` |
 | `zte_cleared` is not `true` | `ZTE_CLEARANCE_DENIED` |
 | `sovereign_key` missing or invalid | `SOVEREIGN_KEY_MISSING` / `SOVEREIGN_KEY_INVALID` |
 | Any unknown or forbidden field present | `FORBIDDEN_FIELD` |
