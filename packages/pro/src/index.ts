@@ -4,7 +4,8 @@ import {
   type SpanStatus,
   type VedaTraceSpan
 } from '@veda-runtime-v1/shared';
-import { createHmac, generateKeyPairSync, randomUUID } from 'node:crypto';
+import { Buffer } from 'node:buffer';
+import { createHmac, generateKeyPairSync, randomUUID, timingSafeEqual } from 'node:crypto';
 
 // ─── Editions & Features (API dependency) ─────────────────────────────
 export type Edition = 'free' | 'paid';
@@ -52,6 +53,123 @@ export function isFeatureAllowed(profile: EditionFeatures, feature: FeatureId): 
   return profile.features.includes(feature);
 }
 
+// ─── License Keys (paid access boundary) ─────────────────────────────
+export type LicensePlan = 'pro';
+
+export interface LicenseClaimsInput {
+  license_id: string;
+  customer_id: string;
+  plan: LicensePlan;
+  issued_at: string;
+  expires_at: string;
+  founding_slot?: number;
+}
+
+export interface LicenseClaims extends LicenseClaimsInput {
+  license_version: 'v1';
+}
+
+export interface LicenseVerificationResult {
+  valid: boolean;
+  errors: string[];
+  edition: Edition;
+  features: FeatureId[];
+  claims?: LicenseClaims;
+}
+
+export function issueLicenseKey(input: LicenseClaimsInput, secret: string): string {
+  assertLicenseSecret(secret);
+  const claims: LicenseClaims = {
+    ...input,
+    license_version: 'v1'
+  };
+  const payload = Buffer.from(canonicalStringify(claims), 'utf8').toString('base64url');
+  const signature = signLicensePayload(payload, secret);
+  return `veda_pro_v1.${payload}.${signature}`;
+}
+
+export function verifyLicenseKey(
+  licenseKey: string | undefined,
+  secret: string | undefined,
+  options: { now?: Date } = {}
+): LicenseVerificationResult {
+  const free = getEditionFeatures('free').features;
+  const fail = (errors: string[]): LicenseVerificationResult => ({
+    valid: false,
+    errors,
+    edition: 'free',
+    features: free
+  });
+
+  if (!licenseKey) return fail(['LICENSE_KEY_MISSING']);
+  if (!secret) return fail(['VEDA_LICENSE_SECRET_REQUIRED']);
+
+  const parts = licenseKey.split('.');
+  if (parts.length !== 3 || parts[0] !== 'veda_pro_v1') {
+    return fail(['LICENSE_FORMAT_INVALID']);
+  }
+
+  const [prefix, payload, signature] = parts;
+  if (!prefix || !payload || !signature) {
+    return fail(['LICENSE_FORMAT_INVALID']);
+  }
+
+  const expectedSignature = signLicensePayload(payload, secret);
+  if (!safeEqualHex(signature, expectedSignature)) {
+    return fail(['LICENSE_SIGNATURE_INVALID']);
+  }
+
+  let claims: LicenseClaims;
+  try {
+    claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as LicenseClaims;
+  } catch {
+    return fail(['LICENSE_PAYLOAD_INVALID']);
+  }
+
+  const errors: string[] = [];
+  if (claims.license_version !== 'v1') errors.push('LICENSE_VERSION_INVALID');
+  if (claims.plan !== 'pro') errors.push('LICENSE_PLAN_INVALID');
+  if (!claims.license_id) errors.push('LICENSE_ID_MISSING');
+  if (!claims.customer_id) errors.push('LICENSE_CUSTOMER_MISSING');
+
+  const issuedAt = Date.parse(claims.issued_at);
+  const expiresAt = Date.parse(claims.expires_at);
+  const now = options.now ?? new Date();
+  if (Number.isNaN(issuedAt)) errors.push('LICENSE_ISSUED_AT_INVALID');
+  if (Number.isNaN(expiresAt)) errors.push('LICENSE_EXPIRES_AT_INVALID');
+  if (!Number.isNaN(expiresAt) && expiresAt <= now.getTime()) errors.push('LICENSE_EXPIRED');
+
+  if (errors.length > 0) {
+    return fail(errors);
+  }
+
+  return {
+    valid: true,
+    errors: [],
+    edition: 'paid',
+    features: getEditionFeatures('paid').features,
+    claims
+  };
+}
+
+function assertLicenseSecret(secret: string): void {
+  if (!secret) throw new Error('VEDA_LICENSE_SECRET_REQUIRED');
+}
+
+function signLicensePayload(payload: string, secret: string): string {
+  return createHmac('sha256', secret).update(payload).digest('hex');
+}
+
+function safeEqualHex(left: string, right: string): boolean {
+  try {
+    const leftBuffer = Buffer.from(left, 'hex');
+    const rightBuffer = Buffer.from(right, 'hex');
+    return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+  } catch {
+    return false;
+  }
+}
+
 // ─── Supabase client type (minimal contract) ─────────────────────────
 export interface SupabaseRow {
   [key: string]: unknown;
@@ -67,8 +185,12 @@ export interface SupabaseInsertResult<T = SupabaseRow> {
   error: { message: string; code?: string } | null;
 }
 
+export interface SupabaseSelectQuery<T = SupabaseRow> extends PromiseLike<SupabaseQueryResult<T>> {
+  eq(col: string, val: unknown): Promise<SupabaseQueryResult<T>>;
+}
+
 export interface SupabaseTable {
-  select(columns?: string): { eq(col: string, val: unknown): Promise<SupabaseQueryResult> };
+  select(columns?: string): SupabaseSelectQuery;
   insert(row: SupabaseRow): { select(): Promise<SupabaseInsertResult> };
 }
 
@@ -174,7 +296,7 @@ export class SupabaseAuditLedger {
     const query = this.client.from('audit_ledger').select('*');
     const result = workflowId
       ? await query.eq('workflow_id', workflowId)
-      : await query.eq('1', '1'); // fetch all
+      : await query;
 
     if (result.error) throw new SupabaseReadError('audit_ledger', result.error.message);
     return (result.data ?? []) as unknown as VedaTraceSpan[];
@@ -235,8 +357,7 @@ export class SupabasePipelineLog {
   async readAll(): Promise<PipelineLogEntry[]> {
     const { data, error } = await this.client
       .from('pipeline_log')
-      .select('*')
-      .eq('1', '1');
+      .select('*');
 
     if (error) throw new SupabaseReadError('pipeline_log', error.message);
     return (data ?? []) as unknown as PipelineLogEntry[];
@@ -608,4 +729,32 @@ export class PaidRuntimeKernel {
       privateKey: this.handoffKeyPair.privateKey
     });
   }
+}
+
+export interface CreateLicensedPaidRuntimeOptions extends CreatePaidRuntimeOptions {
+  licenseKey: string;
+  licenseSecret: string;
+  licenseNow?: Date;
+}
+
+export function createLicensedPaidRuntime(options: CreateLicensedPaidRuntimeOptions): PaidRuntimeKernel {
+  const license = verifyLicenseKey(
+    options.licenseKey,
+    options.licenseSecret,
+    options.licenseNow ? { now: options.licenseNow } : {}
+  );
+  if (!license.valid) {
+    throw new Error(`VEDA_LICENSE_INVALID: ${license.errors.join(',')}`);
+  }
+
+  const runtimeOptions: CreatePaidRuntimeOptions = {
+    rootDir: options.rootDir,
+    hmacKey: options.hmacKey,
+    supabaseClient: options.supabaseClient
+  };
+  if (options.profileId) {
+    runtimeOptions.profileId = options.profileId;
+  }
+
+  return new PaidRuntimeKernel(runtimeOptions);
 }

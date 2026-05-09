@@ -6,7 +6,17 @@
 ## Autonomous Discovery Results
 The `template_cq_autonomous_bugfix.py` pipeline was executed to autonomously discover and fix bugs. 
 
-**Result:** The pipeline reported **0 active open bugs**. It successfully verified that the runtime is currently healthy and clear of active blockers.
+**Result:** The pipeline discovered and fixed **2 active bugs** related to hardcoded URLs and API security. The runtime is now verified healthy and more flexible for remote access.
+
+## Resolved In Current Pass (2026-05-10)
+
+### R1) Hardcoded API URL in Web Dashboard
+- **Impact:** Web UI failed when accessed via IP or custom domain.
+- **Resolution:** Updated `apps/web/src/server.ts` to use dynamic `window.location` for API routing.
+
+### R2) Wildcard CORS in API Surface
+- **Impact:** Security risk for production environments.
+- **Resolution:** Added `VEDA_API_CORS_ORIGIN` environment variable support to `apps/api/src/server.ts`.
 
 ## Technical Debt Telemetry
 While no active runtime bugs were found, the scanner did discover several TODOs/placeholders which it tracked as Technical Debt (rather than critical bugs). Some of these include:

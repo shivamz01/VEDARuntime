@@ -28,6 +28,9 @@ Founding offer: **$13/month** for the **first 3 months** for the **first 2000 pa
 - VEDA OS bridge adapter
 - Hosted support for provider health/fallback configuration
 
+Setup instructions: `docs/setup/supabase-pro-setup.md`  
+SQL schema: `docs/setup/supabase-schema.sql`
+
 ## Rule
 
 Free and paid features live in one monorepo. Paid features are separated by package boundaries and entitlement checks, not by duplicating the runtime.

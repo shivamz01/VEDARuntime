@@ -99,7 +99,7 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
 function writeJson(response: ServerResponse, statusCode: number, body: unknown): void {
   response.writeHead(statusCode, {
     'content-type': 'application/json; charset=utf-8',
-    'access-control-allow-origin': '*'
+    'access-control-allow-origin': process.env.VEDA_API_CORS_ORIGIN || '*'
   });
   response.end(JSON.stringify(body, null, 2));
 }

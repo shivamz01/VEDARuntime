@@ -26,7 +26,14 @@ Use one payment provider as the source of truth for money. At launch, a simple h
 2. Create the founding discount as **35% off for the first 3 months**.
 3. Cap the discount to the **first 2000 paid users** if the provider supports redemption limits.
 4. If the provider does not support a 2000-user cap, track slots manually with `docs/templates/founding_customer_tracker.csv`.
-5. After payment, send the customer the Pro setup instructions and support link.
+5. After payment, issue a Pro license key and send the customer the Pro setup instructions and support link.
+
+```bash
+$env:VEDA_LICENSE_SECRET="your-private-license-signing-secret"
+npm run license:issue -- --customer provider_customer_id --days 30 --slot 1
+```
+
+Store only the `licenseLast4`, provider customer ID, and subscription ID in your private tracker. Do not commit issued license keys to Git.
 
 Do not store live customer data in this public repository. Keep the real tracker in a private spreadsheet, private database, or the payment provider console.
 

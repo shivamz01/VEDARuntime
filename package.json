@@ -32,6 +32,8 @@
     "pipeline:audit": "node scripts/pipeline.mjs audit",
     "pipeline:ship": "node scripts/pipeline.mjs ship",
     "release:check": "npm run pipeline:ship",
+    "license:issue": "npm run build && node scripts/license.mjs issue",
+    "license:verify": "npm run build && node scripts/license.mjs verify",
     "support:collect": "node scripts/support-collect.mjs",
     "status": "node scripts/status.mjs"
   },

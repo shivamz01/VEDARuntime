@@ -11,14 +11,17 @@ function createMockSupabase() {
     audit_ledger: []
   };
 
+  const selectRows = (table) => ({
+    eq: async (col, val) => {
+      if (col === '1') return { data: store[table], error: null };
+      return { data: store[table].filter(row => row[col] === val), error: null };
+    },
+    then: (resolve, reject) => Promise.resolve({ data: store[table], error: null }).then(resolve, reject)
+  });
+
   return {
     from: (table) => ({
-      select: () => ({
-        eq: async (col, val) => {
-          if (col === '1') return { data: store[table], error: null };
-          return { data: store[table].filter(row => row[col] === val), error: null };
-        }
-      }),
+      select: () => selectRows(table),
       insert: (row) => ({
         select: async () => {
           store[table].push(row);

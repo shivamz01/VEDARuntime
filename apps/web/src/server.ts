@@ -183,7 +183,7 @@ export function renderHomePage(): string {
           <button id="runProof">Run Free Proof</button>
           <button class="secondary" id="loadStatus">Load Status</button>
         </div>
-        <pre id="output">API target: http://localhost:3100</pre>
+        <pre id="output">API target: [Dynamic]</pre>
       </div>
       <div class="lanes">
         <article class="lane free">
@@ -213,10 +213,12 @@ export function renderHomePage(): string {
     const output = document.getElementById('output');
     async function show(path, options) {
       try {
-        const res = await fetch('http://localhost:3100' + path, options);
+        const apiBase = window.location.protocol + '//' + window.location.hostname + ':3100';
+        output.textContent = 'Calling ' + apiBase + path + '...';
+        const res = await fetch(apiBase + path, options);
         output.textContent = JSON.stringify(await res.json(), null, 2);
       } catch (error) {
-        output.textContent = 'API unavailable. Start it with: npm run start -w @veda-runtime-v1/api';
+        output.textContent = 'API unavailable. Ensure the API is running on port 3100.\nRun: npm run start -w @veda-runtime-v1/api';
       }
     }
     document.getElementById('runProof').addEventListener('click', () => show('/api/demo/free', { method: 'POST' }));

@@ -30,6 +30,7 @@ Founding offer for the **first 2000 paid users**:
 Pro includes:
 
 - Everything in Free
+- Signed Pro license key verification
 - Supabase audit, nonce, and pipeline-log adapters
 - Paid proof demo
 - Governance profile packs
@@ -42,4 +43,3 @@ Pro is for builders and small teams. It is not a 24/7 managed enterprise support
 ## Enterprise
 
 Enterprise is a future tier. Do not promise enterprise controls, compliance certifications, private cloud deployments, or managed SLAs until those are implemented and contract-reviewed.
-

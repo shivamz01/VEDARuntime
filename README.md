@@ -55,6 +55,8 @@ The Paid Edition provides cloud-native adapters and governance scaling:
 - Exportable audit proof bundles
 - Optional VEDA bridge adapter for ecosystem integration
 
+Supabase setup lives in `docs/setup/supabase-pro-setup.md`; the SQL schema is `docs/setup/supabase-schema.sql`.
+
 Enterprise licensing is a future tier and should not be promised until the enterprise controls, support model, and contract review are real.
 
 ## Installation & Quick Start

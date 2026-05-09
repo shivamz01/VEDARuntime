@@ -54,12 +54,16 @@ Pipeline reports are written under `logs/`. The newest `pipeline-*.json` file is
 
 ## Paid Supabase Setup Fails
 
+First confirm that `docs/setup/supabase-schema.sql` has been run in your private Supabase project.
+
 Confirm these keys exist in your local environment:
 
 ```bash
 SUPABASE_URL
 SUPABASE_SERVICE_KEY
 VEDA_HMAC_KEY
+VEDA_LICENSE_KEY
+VEDA_LICENSE_SECRET
 ```
 
 Do not paste the values into a public issue. The support bundle reports only whether each key is present.
@@ -73,4 +77,3 @@ npm run support:collect
 ```
 
 Send the generated `logs/support-bundle-*.json` file together with the exact command that failed.
-
