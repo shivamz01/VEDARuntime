@@ -8,6 +8,6 @@ logs/
 coverage/
 *.tsbuildinfo
 npm-debug.log*
-sandbox/
+.veda-sandbox/
 *.jsonl
 *.log
