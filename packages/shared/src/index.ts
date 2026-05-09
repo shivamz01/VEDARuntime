@@ -138,7 +138,7 @@ type _AssertAllKeysListed = keyof HandoffJSON_v611 extends
 const _check: _AssertAllKeysListed = true;
 
 const ALLOWED_HANDOFF_KEYS = new Set<string>([
-  ...REQUIRED_HANDOFF_KEYS,
+  ...REQUIRED_HANDOFF_KEYS, 
   ...OPTIONAL_HANDOFF_KEYS
 ]);
 
