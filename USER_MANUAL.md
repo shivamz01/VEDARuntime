@@ -45,28 +45,66 @@ You need **Node.js (Version 20 or higher)** installed on your computer.
     ```bash
     npm install
     ```
-3.  **Run the Safety Demo:**
+3.  **Run the Safety Pipeline:**
     ```bash
-    npm run demo:free
+    npm run pipeline:proof
     ```
 
-This will run a sample task where the AI tries to write a file. You will see the system validate the request, create a rollback point, and generate a "Cryptographic Proof" that the work was done safely.
+This will build the project, run the safety tests, execute a sample task, create a rollback point, and generate a "Cryptographic Proof" that the work was done safely.
+
+### Built-in Pipelines
+
+These pipelines are included in this project. You do not need to install the larger VEDA OS workspace, Python pipeline templates, or external `AGENTS.md` files to use them.
+
+| Command | When to use it |
+| :--- | :--- |
+| `npm run pipeline:proof` | Check the local Free Edition proof chain |
+| `npm run pipeline:audit` | Check cryptographic handoff and audit evidence |
+| `npm run pipeline:ship` | Run the full release-candidate gate before sharing the package |
+
+Each pipeline stops at the first failed gate and writes a JSON report into the `logs/` folder.
 
 ---
 
-## 5. Free vs. Pro Edition
+## 5. Support Bundle
 
-| Feature | Free Edition | Pro Edition (Enterprise) |
+If something fails, run:
+
+```bash
+npm run support:collect
+```
+
+This creates a redacted support file inside `logs/`. It shows versions, package scripts, environment-key presence, and recent pipeline results. It does not collect your API key values.
+
+---
+
+## 6. Free vs. Pro Edition
+
+| Feature | Free Edition | Pro Edition |
 | :--- | :--- | :--- |
+| **Price** | $0/month | $20/month |
+| **Founding Offer** | Not applicable | $13/month for first 3 months, first 2000 paid users only |
 | **Storage** | Local files on your PC | Secure Cloud (Supabase) |
-| **Usage** | Individual Developers | Teams & Large Companies |
-| **Dashboard** | Text-based status | Beautiful Web Dashboard |
+| **Usage** | Individual Developers | Builders & Small Teams |
+| **Status Surface** | Text-based status | API and web status page |
 | **History** | Recent logs only | Permanent Audit History |
 | **Governance** | Standard Safety | Custom Compliance Profiles |
 
 ---
 
-## 6. Understanding the "Proof"
+## 7. Customer Tracking
+
+The founding discount must be tracked outside the public repo. The Excel-compatible template is:
+
+```bash
+docs/templates/founding_customer_tracker.csv
+```
+
+Make a private copy and add one row per paid customer. Free users do not consume the first-2000 paid-user discount slots.
+
+---
+
+## 8. Understanding the "Proof"
 When VEDA finishes a task, it gives you a **Cryptographic Proof**. 
 *   **Verification:** This is a digital signature that guarantees the results haven't been tampered with.
 *   **Trust:** You can give this proof to your manager or a client to prove that the AI followed all safety rules.
@@ -74,4 +112,4 @@ When VEDA finishes a task, it gives you a **Cryptographic Proof**.
 ---
 
 **Need Help?**
-Check the `README.md` for technical documentation or open an issue on the GitHub repository.
+Run `npm run support:collect`, then check `TROUBLESHOOTING.md` and `SUPPORT.md`.

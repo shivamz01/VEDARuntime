@@ -43,7 +43,7 @@ Free edition runs without Supabase:
 
 Paid edition adds:
 - Supabase persistence adapters
-- hosted dashboard/API status
+- API and web status surface
 - governance profile packs
 - exportable audit bundles
 - VEDA OS bridge adapter

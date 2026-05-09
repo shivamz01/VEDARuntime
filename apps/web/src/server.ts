@@ -173,7 +173,7 @@ export function renderHomePage(): string {
     <section class="hero">
       <div>
         <h1>Governed AI execution with rollback and audit proof.</h1>
-        <p class="lead">A standalone runtime extracted from VEDA OS infrastructure. The first release proves one local workflow before paid Supabase and dashboard wiring are enabled.</p>
+        <p class="lead">A standalone runtime extracted from VEDA OS infrastructure. The first release proves one local workflow before paid Supabase automation is enabled.</p>
         <div class="proof">
           <div class="metric"><strong>Version 1</strong><span>Product version</span></div>
           <div class="metric"><strong>Local first</strong><span>Free proof path</span></div>
@@ -201,7 +201,7 @@ export function renderHomePage(): string {
           <ul>
             <li>Supabase audit and nonce adapters</li>
             <li>Pipeline log wiring</li>
-            <li>Dashboard status views</li>
+            <li>API and web status page</li>
             <li>Audit proof bundle export</li>
             <li>VEDA OS bridge adapter</li>
           </ul>

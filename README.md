@@ -34,7 +34,7 @@ VEDA Runtime exists to solve these operational failures at the foundational laye
 
 ## Product Editions
 
-VEDA Runtime is distributed across two distinct boundaries: a secure local core (Free Edition) and an enterprise-scale cloud extension (Paid Edition).
+VEDA Runtime is distributed across two distinct launch boundaries: a secure local core (Free Edition) and a Pro cloud extension (Paid Edition).
 
 ### Core Engine (Free Edition)
 The foundation of the runtime operates entirely locally, ensuring deterministic and secure execution without cloud dependencies:
@@ -47,13 +47,15 @@ The foundation of the runtime operates entirely locally, ensuring deterministic 
 - **HMAC-Chained Audit Ledger** — append-only local JSONL ledger where every trace span is cryptographically chained (`HMAC-SHA256`) to its predecessor, creating a tamper-evident execution record
 - **Cryptographic Handoffs** — `ed25519` signing and `HMAC-SHA256` payload integrity verification
 
-### Enterprise Extensions (Paid Edition)
+### Pro Extensions (Paid Edition)
 The Paid Edition provides cloud-native adapters and governance scaling:
 - Supabase persistence adapters (audit, nonce, and `pipeline_log`)
-- Hosted dashboard and API status telemetry
+- API status telemetry and web status page
 - Advanced governance profile packs
 - Exportable audit proof bundles
 - Optional VEDA bridge adapter for ecosystem integration
+
+Enterprise licensing is a future tier and should not be promised until the enterprise controls, support model, and contract review are real.
 
 ## Installation & Quick Start
 
@@ -76,14 +78,49 @@ Run the full test suite to confirm everything compiled correctly:
 ```bash
 npm run test
 ```
-All tests should pass, covering shared contracts, ed25519 + HMAC handoff verification, sandbox policy, rollback boundaries, audit-chain continuity, paid audit bundles, free-tier proof chain, pro entitlements, and API/web build verification.
+All tests should pass, covering shared contracts, ed25519 + HMAC handoff verification, sandbox policy, rollback boundaries, audit-chain continuity, paid audit bundles, native pipeline runner behavior, free-tier proof chain, pro entitlements, and API/web build verification.
 
 ### Run the Release Gate
 Before packaging or handing this to a customer, run:
 ```bash
 npm run release:check
 ```
-This builds all workspaces, runs the full test suite, executes both Free and Paid proof demos, and prints the runtime status payload.
+This runs the native `pipeline:ship` gate: it builds all workspaces, runs the full test suite, executes both Free and Paid proof demos, prints the runtime status payload, and writes a machine-checkable JSON summary under `logs/`.
+
+### Run Native Pipelines
+VEDA Runtime includes a small, self-contained pipeline runner for GitHub users. It does not require the main `VEDA-OS-INFRA` workspace, Python pipeline templates, or external agent markdown files.
+
+| Command | Purpose |
+|---|---|
+| `npm run pipeline:proof` | Build, run all contract tests, execute the Free proof demo, and print status |
+| `npm run pipeline:audit` | Build, run handoff/audit tests, execute the Paid proof demo, and print status |
+| `npm run pipeline:ship` | Run the full release-candidate gate for build, tests, Free demo, Paid demo, and status |
+
+Each pipeline fails closed on the first broken step and writes `logs/pipeline-<name>-<timestamp>.json` with step IDs, exit codes, status, and output tails. This JSON artifact is the source of truth for whether the pipeline passed.
+
+### Collect Support Evidence
+When a user reports an issue, ask them to run:
+```bash
+npm run support:collect
+```
+
+This creates a redacted `logs/support-bundle-<timestamp>.json` file with version, script, environment-key presence, and latest pipeline information. It does not collect environment secret values or customer data.
+
+## Pricing & Customer Tracking
+
+Launch pricing:
+- Free: **$0/month**
+- Pro: **$20/month**
+- Founding offer: **$13/month** for the **first 3 months**, limited to the **first 2000 paid users**
+
+The Excel-compatible tracker template is `docs/templates/founding_customer_tracker.csv`. Keep the real customer tracker private; do not commit live customer data to this repository.
+
+Commercial docs:
+- `BUYING.md` — payment flow and founding offer rules
+- `LICENSE_TIERS.md` — Free vs Pro boundaries
+- `SUPPORT.md` — free and paid support workflow
+- `TROUBLESHOOTING.md` — common failure paths
+- `docs/CLAIMS_AND_BRAND_POLICY.md` — competitor wording, logo, and compatibility-claim rules
 
 ### Run the Local Proof Workflow
 Execute a complete, deterministic proof workflow out-of-the-box:
@@ -111,8 +148,8 @@ npm run status
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
 | `VEDA_HMAC_KEY` | Recommended | `local_demo_hmac_key` | HMAC key for tamper-evident audit ledger entries. **Set a real key in production.** |
-| `SUPABASE_URL` | Paid only | — | Supabase project URL (Enterprise Edition) |
-| `SUPABASE_SERVICE_KEY` | Paid only | — | Supabase service role key (Enterprise Edition) |
+| `SUPABASE_URL` | Paid only | — | Supabase project URL (Pro Edition) |
+| `SUPABASE_SERVICE_KEY` | Paid only | — | Supabase service role key (Pro Edition) |
 
 ## Project Structure
 
@@ -127,11 +164,15 @@ Veda-Runtime/
 │   └── bridge-veda/  — Optional VEDA ecosystem bridge adapter
 ├── apps/
 │   ├── api/          — Runtime HTTP API surface
-│   └── web/          — Status dashboard
+│   └── web/          — Status web page
 ├── tests/            — Deterministic acceptance tests
 ├── examples/
 │   └── free-demo.mjs — Local proof workflow (zero cloud dependencies)
-└── docs/             — PRD, architecture, and protocol documentation
+├── scripts/
+│   ├── pipeline.mjs        — Native proof/audit/ship pipeline runner
+│   ├── support-collect.mjs — Redacted support bundle collector
+│   └── status.mjs          — Runtime status payload
+└── docs/                   — PRD, architecture, pricing, policy, and templates
 ```
 
 ## The HANDOFF_JSON v6.1.1 Protocol
@@ -216,7 +257,7 @@ To maintain the absolute integrity of the execution environment, the following r
 4. **Rollback Mandate**: All destructive actions strictly require a verified rollback checkpoint prior to execution.
 5. **Cryptographic Auditing**: Audit HMAC hashing requires `VEDA_HMAC_KEY` or an explicit local proof key to ensure tamper-evident records.
 6. **Decoupled Architecture**: The Free Edition must never depend on Paid/Supabase wiring.
-7. **Strict Entitlement Gates**: All paid and enterprise features are gated by rigid entitlement checks.
+7. **Strict Entitlement Gates**: All paid features are gated by rigid entitlement checks.
 8. **No Unsafe Shell Expansion**: `git`, `npm`, `curl`, `wget`, `rm`, `python`, `node`, and shell interpreters are denied by default in the Execution Sandbox.
 9. **One Agent at a Time**: No parallel agent dispatch. Sequential execution only.
 10. **No Simulation as Production**: `DATA_STATUS: SIMULATED` cannot be used to claim production readiness.

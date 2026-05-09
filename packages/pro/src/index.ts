@@ -18,7 +18,6 @@ export type FeatureId =
   | 'supabase_audit'
   | 'pipeline_log'
   | 'audit_bundle_export'
-  | 'dashboard'
   | 'veda_bridge';
 
 export interface EditionFeatures {
@@ -39,7 +38,6 @@ const PAID_FEATURES: FeatureId[] = [
   'supabase_audit',
   'pipeline_log',
   'audit_bundle_export',
-  'dashboard',
   'veda_bridge'
 ];
 

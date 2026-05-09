@@ -15,10 +15,14 @@ The free edition is for local proof and developer adoption.
 
 ## Paid
 
-The paid edition is for teams that need shared infrastructure and audit proof.
+The paid edition is the Pro launch tier for builders and small teams that need shared infrastructure and audit proof.
+
+Base price: **$20/month**
+
+Founding offer: **$13/month** for the **first 3 months** for the **first 2000 paid users**.
 
 - Supabase `nonce_registry`, `pipeline_log`, and `audit_ledger`
-- Dashboard/API status surfaces
+- API and web status surfaces
 - Governance profiles
 - Audit proof bundle export
 - VEDA OS bridge adapter

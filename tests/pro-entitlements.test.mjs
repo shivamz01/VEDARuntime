@@ -21,3 +21,9 @@ test('paid edition enables Supabase and audit bundle features', () => {
   assert.equal(isFeatureAllowed(paid, 'supabase_audit'), true);
   assert.equal(isFeatureAllowed(paid, 'audit_bundle_export'), true);
 });
+
+test('paid edition does not claim dashboard before dashboard is implemented', () => {
+  const paid = getEditionFeatures('paid');
+
+  assert.equal(paid.features.includes('dashboard'), false);
+});

@@ -11,8 +11,8 @@
     "ai-security",
     "ai-governance",
     "observability",
-    "langchain-alternative",
-    "agentops",
+    "agent-runtime",
+    "audit-ledger",
     "fail-closed",
     "V.E.D.A."
   ],
@@ -27,7 +27,12 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "demo:free": "npm run build && node examples/free-demo.mjs",
     "demo:paid": "npm run build && node examples/paid-demo.mjs",
-    "release:check": "npm test && npm run demo:free && npm run demo:paid && npm run status",
+    "pipeline": "node scripts/pipeline.mjs",
+    "pipeline:proof": "node scripts/pipeline.mjs proof",
+    "pipeline:audit": "node scripts/pipeline.mjs audit",
+    "pipeline:ship": "node scripts/pipeline.mjs ship",
+    "release:check": "npm run pipeline:ship",
+    "support:collect": "node scripts/support-collect.mjs",
     "status": "node scripts/status.mjs"
   },
   "devDependencies": {

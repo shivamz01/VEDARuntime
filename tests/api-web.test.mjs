@@ -11,6 +11,7 @@ test('api status payload exposes Version 1 and free paid boundaries', () => {
   assert.equal(payload.handoffSchemaVersion, 'v6.1.1');
   assert.ok(payload.freeFeatures.includes('local_runtime'));
   assert.ok(payload.paidFeatures.includes('supabase_audit'));
+  assert.equal(payload.paidFeatures.includes('dashboard'), false);
 });
 
 test('web homepage presents free and paid product lanes', () => {
@@ -20,4 +21,5 @@ test('web homepage presents free and paid product lanes', () => {
   assert.match(html, /Free/);
   assert.match(html, /Paid/);
   assert.match(html, /HANDOFF_JSON v6\.1\.1/);
+  assert.doesNotMatch(html, /dashboard/i);
 });
