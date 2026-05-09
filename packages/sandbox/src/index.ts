@@ -62,7 +62,7 @@ export class ShellPolicy {
     // CR3: Path traversal and sensitive path check
     if (/\.\./.test(normalized)) return deny('PATH_TRAVERSAL_DENIED');
     for (const pattern of SENSITIVE_PATTERNS) {
-      if (normalized.includes(pattern)) return deny(`SENSITIVE_PATH_DENIED_${pattern}`);
+      if (normalized.includes(pattern)) return deny('SENSITIVE_PATH_DENIED');
     }
 
     const pipeParts = normalized.split('|').map(part => part.trim());
@@ -72,8 +72,7 @@ export class ShellPolicy {
     if (DENIED_COMMANDS.has(commandName)) return deny(`COMMAND_DENIED_${commandName}`);
     if (!SAFE_READ_COMMANDS.has(commandName)) return deny(`COMMAND_NOT_ALLOWLISTED_${commandName}`);
 
-    // M1: Runtime contract assertion (logic-only, execution layer must enforce)
-    return allow('SAFE_READ_COMMAND_CONTRACT_CWD_PATH_ENFORCED');
+    return allow('SAFE_READ_COMMAND');
   }
 
   private evaluatePipe(parts: string[]): ShellPolicyDecision {
