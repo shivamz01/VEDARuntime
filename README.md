@@ -210,11 +210,34 @@ Every inter-agent or runtime execution request must use this protocol. The schem
   },
   "DATA_STATUS": "REAL",
   "phase": "2",
-  "sovereign_key": "your-project-key",
+  "sovereign_key": "veda_local_free",
   "signature": "ed25519-signed-payload",
   "hmac": "HMAC-SHA256-hash"
 }
 ```
+
+
+**`sovereign_key` — Free vs Pro:**
+
+| Edition | Key | How it's verified |
+|---|---|---|
+| Free | `veda_local_free` | Built-in — accepted automatically, no setup needed |
+| Pro | Issued after payment | Verified against your Supabase `api_keys` table |
+
+Free users use `veda_local_free` out of the box. No account, no configuration required.
+
+**Governance fields explained:**
+
+| Field | What it means |
+|---|---|
+| `zte_cleared` | Zero Trust Enforcement — confirms the agent has passed the permission check for this specific tool or action. Every tool call requires ZTE sign-off before execution. |
+| `spe_chain_passed` | Security Policy Enforcement — confirms the full security policy chain has been evaluated for this request (used on build/security execution paths). |
+| `legal_cleared` | Legal gate has evaluated this request and found no compliance blockers (DPDPA, GDPR, etc). |
+| `budget_cleared` | Token and cost budget gate has confirmed this request is within limits. |
+
+For Free Edition local use, the runtime evaluates these gates internally. You declare intent in the handoff; the runtime enforces or blocks it.
+
+---
 
 **Rejection codes:**
 
