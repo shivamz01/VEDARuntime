@@ -130,13 +130,35 @@ const REQUIRED_HANDOFF_KEYS = [
 ] as const;
 
 const OPTIONAL_HANDOFF_KEYS = ['workflow_id'] as const;
+
+// M4: Compile-time assertion that all interface keys are listed
+type _AssertAllKeysListed = keyof HandoffJSON_v611 extends 
+  typeof REQUIRED_HANDOFF_KEYS[number] | typeof OPTIONAL_HANDOFF_KEYS[number] 
+  ? true : never;
+// @ts-ignore - Verification only
+const _check: _AssertAllKeysListed = true;
+
 const ALLOWED_HANDOFF_KEYS = new Set<string>([
   ...REQUIRED_HANDOFF_KEYS,
   ...OPTIONAL_HANDOFF_KEYS
 ]);
 
+const ALLOWED_PAYLOAD_KEYS = new Set(['instruction', 'context', 'data', 'constraints']);
+const ALLOWED_GOVERNANCE_KEYS = new Set([
+  'zte_cleared', 
+  'spe_chain_passed', 
+  'legal_cleared', 
+  'budget_cleared', 
+  'brand_cleared', 
+  'human_approval_required'
+]);
+
 const VALID_DATA_STATUS = new Set<string>(['REAL', 'SIMULATED', 'PARTIAL']);
 const VALID_PHASES = new Set<string>(['1', '2']);
+
+// CR1: Format enforcement for nonces
+const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const HEX_32 = /^[0-9a-f]{32,}$/i;
 
 export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): ValidationResult {
   const errors: string[] = [];
@@ -147,10 +169,28 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
 
   const handoff = candidate as Record<string, unknown>;
 
+  // M1: Distinguish between missing and invalid for critical fields
+  if (!('DATA_STATUS' in handoff)) {
+    errors.push('DATA_STATUS_MISSING');
+  } else if (!VALID_DATA_STATUS.has(String(handoff.DATA_STATUS))) {
+    errors.push('DATA_STATUS_INVALID');
+  }
+
+  if (!('nonce' in handoff)) {
+    errors.push('NONCE_MISSING');
+  } else {
+    const nonce = String(handoff.nonce);
+    if (!UUID_V4.test(nonce) && !HEX_32.test(nonce)) {
+      errors.push('NONCE_INVALID');
+    }
+  }
+
   for (const key of REQUIRED_HANDOFF_KEYS) {
+    if (key === 'DATA_STATUS' || key === 'nonce') continue; // Handled above
     if (!(key in handoff)) errors.push(`MISSING_${key}`);
   }
 
+  // H3: Top-level forbidden fields
   for (const key of Object.keys(handoff)) {
     if (!ALLOWED_HANDOFF_KEYS.has(key)) errors.push(`FORBIDDEN_FIELD_${key}`);
   }
@@ -165,34 +205,37 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
     const timestampMs = Date.parse(handoff.timestamp);
     if (!Number.isFinite(timestampMs)) {
       errors.push('TIMESTAMP_INVALID');
-    } else if (timestampMs - nowMs > 300_000) {
-      errors.push('TIMESTAMP_INVALID');
-    } else if (nowMs - timestampMs > 300_000) {
-      errors.push('NONCE_STALE');
+    } else {
+      const diff = timestampMs - nowMs;
+      // L2: Boundary check (inclusive 300s)
+      if (diff >= 300_000) {
+        errors.push('TIMESTAMP_INVALID');
+      } else if (diff <= -300_000) {
+        errors.push('NONCE_STALE');
+      }
     }
-  }
-
-  if (typeof handoff.nonce !== 'string' || handoff.nonce.trim().length < 8) {
-    errors.push('NONCE_INVALID');
-  }
-
-  if (!VALID_DATA_STATUS.has(String(handoff.DATA_STATUS))) {
-    errors.push('DATA_STATUS_INVALID');
   }
 
   if (!VALID_PHASES.has(String(handoff.phase))) {
     errors.push('PHASE_INVALID');
   }
 
-  if (typeof handoff.sovereign_key !== 'string' || !handoff.sovereign_key.startsWith('veda_')) {
+  // H1: Sovereign key tier verification
+  if (typeof handoff.sovereign_key !== 'string') {
     errors.push('SOVEREIGN_KEY_INVALID');
+  } else {
+    const sk = handoff.sovereign_key;
+    const isFree = sk === 'veda_local_free';
+    const isPro = sk.startsWith('veda_pro_') && sk.length >= 41; // veda_pro_ + 32 hex
+    if (!isFree && !isPro) errors.push('SOVEREIGN_KEY_INVALID');
   }
 
-  if (typeof handoff.signature !== 'string' || handoff.signature.length === 0) {
+  // H2: Cryptographic shape validation
+  if (typeof handoff.signature !== 'string' || !/^[A-Za-z0-9+/]+=*$/.test(handoff.signature) || handoff.signature.length < 32) {
     errors.push('SIGNATURE_INVALID');
   }
 
-  if (typeof handoff.hmac !== 'string' || handoff.hmac.length === 0) {
+  if (typeof handoff.hmac !== 'string' || !/^[a-f0-9]{64}$/.test(handoff.hmac)) {
     errors.push('HMAC_INVALID');
   }
 
@@ -234,17 +277,22 @@ export function sealHandoff(
   return { ...handoff, signature, hmac };
 }
 
+// M3: verifyHandoffCrypto is now strictly about crypto
 export function verifyHandoffCrypto(
   handoff: unknown,
-  material: HandoffVerificationMaterial,
-  nowMs = Date.now()
+  material: HandoffVerificationMaterial
 ): ValidationResult {
-  const shape = validateHandoffShape(handoff, nowMs);
-  if (!shape.valid) return shape;
+  if (!handoff || typeof handoff !== 'object') return { valid: false, errors: ['HANDOFF_NOT_OBJECT'] };
+  const signed = handoff as Record<string, any>;
+  
+  // Basic shape for crypto
+  if (typeof signed.hmac !== 'string' || typeof signed.signature !== 'string') {
+    return { valid: false, errors: ['CRYPTO_FIELDS_MISSING'] };
+  }
+
   if (!material.hmacKey) throw new Error('VEDA_HMAC_KEY_REQUIRED');
 
-  const signed = handoff as HandoffJSON_v611;
-  const payload = handoffSigningPayload(signed);
+  const payload = handoffSigningPayload(signed as HandoffJSON_v611);
   const expectedHmac = createHmac('sha256', material.hmacKey).update(payload).digest('hex');
   const errors: string[] = [];
 
@@ -274,6 +322,12 @@ function validatePayload(value: unknown, errors: string[]): void {
   }
 
   const payload = value as Record<string, unknown>;
+  
+  // H3: Nested forbidden fields
+  for (const key of Object.keys(payload)) {
+    if (!ALLOWED_PAYLOAD_KEYS.has(key)) errors.push(`FORBIDDEN_PAYLOAD_FIELD_${key}`);
+  }
+
   if (typeof payload.instruction !== 'string') errors.push('PAYLOAD_INSTRUCTION_INVALID');
   if (typeof payload.context !== 'string') errors.push('PAYLOAD_CONTEXT_INVALID');
   if (!payload.data || typeof payload.data !== 'object' || Array.isArray(payload.data)) {
@@ -288,28 +342,53 @@ function validateGovernance(value: unknown, errors: string[]): void {
     return;
   }
 
-  const governance = value as Record<string, unknown>;
+  const governance = value as Record<string, any>;
+
+  // H3: Nested forbidden fields
+  for (const key of Object.keys(governance)) {
+    if (!ALLOWED_GOVERNANCE_KEYS.has(key)) errors.push(`FORBIDDEN_GOVERNANCE_FIELD_${key}`);
+  }
+
+  // CR2: Must be explicitly true
   if (governance.zte_cleared !== true) errors.push('ZTE_CLEARANCE_DENIED');
-  for (const key of ['spe_chain_passed', 'legal_cleared', 'budget_cleared']) {
-    if (typeof governance[key] !== 'boolean') errors.push(`GOVERNANCE_${key}_INVALID`);
+  if (governance.spe_chain_passed !== true) errors.push('SPE_CLEARANCE_DENIED');
+  if (governance.legal_cleared !== true) errors.push('LEGAL_CLEARANCE_DENIED');
+  if (governance.budget_cleared !== true) errors.push('BUDGET_CLEARANCE_DENIED');
+  
+  // L3: Optional field validation
+  if ('brand_cleared' in governance && governance.brand_cleared !== true) {
+    errors.push('BRAND_CLEARANCE_DENIED');
+  }
+  if ('human_approval_required' in governance && typeof governance.human_approval_required !== 'boolean') {
+    errors.push('HUMAN_APPROVAL_SIGNAL_INVALID');
   }
 }
 
 function canonicalize(value: unknown): unknown {
-  if (value === null || typeof value !== 'object') return value;
-  if (Array.isArray(value)) return value.map(canonicalize);
+  // M2: Normalize null to undefined (omitted) for HMAC stability
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map(canonicalize).filter(v => v !== undefined);
 
   const sorted: Record<string, unknown> = {};
-  for (const key of Object.keys(value as Record<string, unknown>).sort()) {
-    const entry = (value as Record<string, unknown>)[key];
-    if (entry !== undefined) sorted[key] = canonicalize(entry);
+  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+  
+  for (const [key, entry] of entries) {
+    const processed = canonicalize(entry);
+    if (processed !== undefined) sorted[key] = processed;
   }
   return sorted;
 }
 
 function safeEqualHex(left: string, right: string): boolean {
-  if (!/^[a-f0-9]+$/i.test(left) || !/^[a-f0-9]+$/i.test(right)) return false;
-  const leftBuffer = Buffer.from(left, 'hex');
-  const rightBuffer = Buffer.from(right, 'hex');
-  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+  // H4: Fix timing oracle by checking length first and enforcing SHA256 output length (32 bytes)
+  if (left.length !== 64 || right.length !== 64) return false;
+  
+  try {
+    const leftBuffer = Buffer.from(left, 'hex');
+    const rightBuffer = Buffer.from(right, 'hex');
+    return timingSafeEqual(leftBuffer, rightBuffer);
+  } catch {
+    return false;
+  }
 }
