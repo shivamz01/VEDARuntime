@@ -1,0 +1,13 @@
+node_modules/
+dist/
+logs/
+.env
+.env.*
+!.env.example
+.veda-runtime/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+sandbox/
+*.jsonl
+*.log

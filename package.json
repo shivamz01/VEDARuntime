@@ -1,0 +1,40 @@
+{
+  "name": "veda-runtime-v1",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Enterprise-grade AI execution kernel. Deterministic orchestration, cryptographic audit ledgers, rollback checkpoints, and strict governance for safe LLM agent workflows.",
+  "keywords": [
+    "ai-agents",
+    "llm-orchestration",
+    "agentic-workflows",
+    "ai-security",
+    "ai-governance",
+    "observability",
+    "langchain-alternative",
+    "agentops",
+    "fail-closed",
+    "V.E.D.A."
+  ],
+  "author": "Shivam Shrivastav",
+  "license": "BUSL-1.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @veda-runtime-v1/shared && npm run build -w @veda-runtime-v1/sandbox && npm run build -w @veda-runtime-v1/audit && npm run build -w @veda-runtime-v1/pro && npm run build -w @veda-runtime-v1/bridge-veda && npm run build -w @veda-runtime-v1/runtime && npm run build -w @veda-runtime-v1/api && npm run build -w @veda-runtime-v1/web",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "demo:free": "npm run build && node examples/free-demo.mjs",
+    "demo:paid": "npm run build && node examples/paid-demo.mjs",
+    "release:check": "npm test && npm run demo:free && npm run demo:paid && npm run status",
+    "status": "node scripts/status.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
