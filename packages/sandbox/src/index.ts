@@ -97,7 +97,7 @@ function getCommandName(command: string): string {
   const firstPart = command.trim().split(/\s+/)[0] ?? '';
   // H1: Extract basename to handle absolute paths correctly
   const pathParts = firstPart.split(/[\\/]/);
-  return pathParts[pathParts.length - 1].toLowerCase();
+  return (pathParts[pathParts.length - 1] ?? '').toLowerCase();
 }
 
 function allow(reason: string): ShellPolicyDecision {
