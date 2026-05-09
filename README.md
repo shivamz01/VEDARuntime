@@ -193,14 +193,14 @@ Every inter-agent or runtime execution request must use this protocol. The schem
   "schema_version": "v6.1.1",
   "timestamp": "2026-05-09T12:00:00Z",
   "nonce": "c6f6e2da-e691-4da2-a709-e684a592faa6",
-  "source_agent": "ceo-veda",
-  "target_agent": "runtime-kernel",
-  "task_id": "VT-TASK-001",
+  "source_agent": "orchestrator",
+  "target_agent": "file-writer",
+  "task_id": "TASK-001",
   "payload": {
-    "instruction": "Execute governed workflow",
-    "context": "scoped-session",
-    "data": {},
-    "constraints": ["free-edition", "local-only"]
+    "instruction": "Write the processed report to output/report.md",
+    "context": "user-session-abc123",
+    "data": { "report_content": "..." },
+    "constraints": ["write-sandbox-only", "no-network"]
   },
   "governance": {
     "zte_cleared": true,
@@ -210,7 +210,7 @@ Every inter-agent or runtime execution request must use this protocol. The schem
   },
   "DATA_STATUS": "REAL",
   "phase": "2",
-  "sovereign_key": "veda_runtime_local",
+  "sovereign_key": "your-project-key",
   "signature": "ed25519-signed-payload",
   "hmac": "HMAC-SHA256-hash"
 }
