@@ -20,11 +20,11 @@ This file tracks open bugs, confirmed limitations, and deferred fixes in VEDA Ru
 **Status:** Resolved — 2026-05-10  
 **Affected:** `apps/api/src/server.ts`  
 **Detail:** Earlier build used `*` as the CORS origin, creating a security risk in production environments.  
-**Fix:** Set `VEDA_API_CORS_ORIGIN` environment variable to your allowed origin. See `.env.example`.
+**Fix:** API responses now default to `http://localhost:3101` instead of `*`. Set `VEDA_API_CORS_ORIGIN` to your deployed web origin in production. See `.env.example`.
 
 ---
 
-### KI-003 — Web dashboard hardcoded API URL (fixed in current build)
+### KI-003 — Web status page hardcoded API URL (fixed in current build)
 **Severity:** Medium  
 **Status:** Resolved — 2026-05-10  
 **Affected:** `apps/web/src/server.ts`  

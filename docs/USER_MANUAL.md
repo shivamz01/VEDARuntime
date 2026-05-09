@@ -30,7 +30,7 @@ Before the AI even starts working, VEDA filters the information it sees. It remo
 Every single move the AI makes is recorded and "chained" together using high-level cryptography. If even one letter in the log is changed, the system will detect it immediately.
 
 ### ⏪ Rollback Engine (The Undo Button)
-Before the AI changes a file, VEDA takes a "snapshot." If the task fails or the AI goes off-track, you can instantly restore your file to exactly how it was before the AI touched it.
+Before the AI changes a file, VEDA takes a "snapshot." The runtime now exposes a restore path for existing-file checkpoints, so a verified snapshot can be written back if a guarded task fails.
 
 ---
 

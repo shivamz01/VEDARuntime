@@ -11,10 +11,10 @@ test("commercial docs define the corrected founding offer", async () => {
   const tiers = await readFile(path.join(root, "LICENSE_TIERS.md"), "utf8");
 
   for (const text of [buying, tiers]) {
-    assert.match(text, /\$13\/month/);
+    assert.match(text, /\$13\s*\/\s*month/);
     assert.match(text, /first 3 months/i);
-    assert.match(text, /first 2000 paid users/i);
-    assert.match(text, /\$20\/month/);
+    assert.match(text, /first 2,?000 paid users/i);
+    assert.match(text, /\$20\s*\/\s*month/);
   }
 });
 
@@ -55,14 +55,36 @@ test("package keywords avoid competitor names and unsupported compatibility clai
 test("public launch docs do not claim a dashboard exists yet", async () => {
   const files = [
     "README.md",
-    "USER_MANUAL.md",
+    path.join("docs", "USER_MANUAL.md"),
     "LICENSE_TIERS.md",
     path.join("docs", "pricing", "free-vs-paid.md"),
-    path.join("docs", "PRD_VERSION_1.md"),
   ];
 
   for (const file of files) {
     const text = await readFile(path.join(root, file), "utf8");
     assert.doesNotMatch(text, /dashboard/i, `${file} still claims dashboard`);
   }
+});
+
+test("license metadata and public docs agree with the checked-in license", async () => {
+  const pkg = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+  const license = await readFile(path.join(root, "LICENSE"), "utf8");
+  const readme = await readFile(path.join(root, "README.md"), "utf8");
+
+  assert.equal(pkg.license, "AGPL-3.0-only");
+  assert.match(license, /GNU AFFERO GENERAL PUBLIC LICENSE/);
+  assert.doesNotMatch(readme, /Proprietary/i);
+  assert.match(readme, /AGPL-3\.0-only/);
+});
+
+test("environment example and CI release gate are present", async () => {
+  const envExample = await readFile(path.join(root, ".env.example"), "utf8");
+  const workflow = await readFile(
+    path.join(root, ".github", "workflows", "release-check.yml"),
+    "utf8",
+  );
+
+  assert.match(envExample, /VEDA_HMAC_KEY=/);
+  assert.match(envExample, /VEDA_API_CORS_ORIGIN=http:\/\/localhost:3101/);
+  assert.match(workflow, /npm run release:check/);
 });

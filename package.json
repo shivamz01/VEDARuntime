@@ -17,7 +17,7 @@
     "V.E.D.A."
   ],
   "author": "Shivam Shrivastav",
-  "license": "BUSL-1.1",
+  "license": "AGPL-3.0-only",
   "workspaces": [
     "apps/*",
     "packages/*"

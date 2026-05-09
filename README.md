@@ -1,6 +1,6 @@
 # VEDA Runtime
 
-![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen) ![License](https://img.shields.io/badge/license-Proprietary-blue) ![Version](https://img.shields.io/badge/version-1.0.0-informational)
+![Node.js >= 20](https://img.shields.io/badge/node-%3E%3D20-brightgreen) ![License](https://img.shields.io/badge/license-AGPL--3.0--only-blue) ![Version](https://img.shields.io/badge/version-1.0.0-informational)
 
 **Production-safe execution kernel for governed AI agent workflows.**
 
@@ -75,7 +75,7 @@ Anything that does not pass this end-to-end chain is `SPEC_ONLY`, `PARTIAL`, or 
 Layer 0     Kill Switch               — Absolute halt authority; cannot be overridden
 Layer 0.5   Orchestrator / Intake     — Interprets human instruction and creates the signed handoff
 Layer 1     Runtime API               — Schema validation · nonce · signature · HMAC
-Layer 1.5   @veda/shared              — Canonical TS contracts: HandoffJSON, FSMState, VedaTraceSpan
+Layer 1.5   @veda-runtime-v1/shared   — Canonical TS contracts: HandoffJSON, FSMState, VedaTraceSpan
 Layer 2     Governance Injection      — Zero Trust · Security Policy · Legal · Budget · Brand · Manual approval
 Layer 3     Risk & Threat Engine      — Dynamic Weighted Risk Vector (DWRV) · graph propagation · obfuscation detection
 Layer 4     Workflow Engine / FSM     — DAG creation · sequential dispatch · retry governance
@@ -86,7 +86,7 @@ Layer 4.5   Capability Router         — Provider health check · fallback · c
                and are not execution components. ──
 
 Layer 7     Execution Sandbox         — Deny-by-default shell · filesystem boundary · timeouts
-Layer 7+    Rollback Engine           — Snapshot · verify · checkpoint · restore on failure
+Layer 7+    Rollback Engine           — Snapshot · verify · checkpoint · restore API
 Layer 8     Observability Engine      — VedaTrace spans · metrics · failure replay
 Layer 8.5   Sovereign Audit Ledger    — HMAC-chained · append-only · tamper-evident
 ```
@@ -242,7 +242,7 @@ Every inter-agent or runtime execution request must use this protocol. The schem
 | Edition | Key | How it's verified |
 |---|---|---|
 | Free | `veda_local_free` | Built-in — accepted automatically, no setup needed |
-| Pro | Issued after payment | Verified against your Supabase `api_keys` table |
+| Pro | `veda_pro_<32+ hex>` | Verified by signed Pro license key before Paid runtime construction |
 
 Free users use `veda_local_free` out of the box. No account, no configuration required.
 
@@ -291,11 +291,12 @@ For Free Edition local use, the runtime evaluates these gates internally. You de
 
 | Variable | Required | Default | Purpose |
 |---|---|---|---|
-| `VEDA_HMAC_KEY` | **Recommended** | `local_demo_hmac_key` | HMAC key for tamper-evident audit ledger. **Set a real key in production.** |
+| `VEDA_HMAC_KEY` | **Required in production** | Demo-only fallback outside production | HMAC key for tamper-evident audit ledger. **Set a real key in production.** |
+| `VEDA_API_CORS_ORIGIN` | API server | `http://localhost:3101` | Allowed web origin for API responses. Do not use wildcard in production. |
 | `SUPABASE_URL` | Paid only | — | Supabase project URL |
 | `SUPABASE_SERVICE_KEY` | Paid only | — | Supabase service role key |
 
-The runtime **fails startup** if `VEDA_HMAC_KEY` is missing in production mode. See `.env.example` for the full list.
+The API demo path **fails startup** if `VEDA_HMAC_KEY` is missing in production mode (`VEDA_RUNTIME_MODE=production` or `NODE_ENV=production`). See `.env.example` for the full list.
 
 ---
 
@@ -304,7 +305,7 @@ The runtime **fails startup** if `VEDA_HMAC_KEY` is missing in production mode. 
 ```
 VEDARuntime/
 ├── packages/
-│   ├── shared/         — Canonical types, schema validator, constants (@veda/shared)
+│   ├── shared/         — Canonical types, schema validator, constants (@veda-runtime-v1/shared)
 │   ├── audit/          — Local nonce registry + HMAC-chained audit ledger
 │   ├── sandbox/        — Deny-by-default shell policy engine
 │   ├── runtime/        — Runtime Kernel: Context Governor, Rollback Engine, orchestrator
@@ -369,7 +370,7 @@ It is production-safe runtime infrastructure. The goal is making AI execution de
 
 ## License
 
-Proprietary. See [LICENSE](./LICENSE) file for details.
+AGPL-3.0-only. See [LICENSE](./LICENSE) for the full license text.
 
 ---
 

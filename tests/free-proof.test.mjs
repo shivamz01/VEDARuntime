@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { generateKeyPairSync } from 'node:crypto';
 import { mkdtemp, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 import { RuntimeKernel } from '../packages/runtime/dist/index.js';
+import { HANDOFF_SCHEMA_VERSION, sealHandoff } from '../packages/shared/dist/index.js';
 
 test('free runtime executes one rollback-protected local proof workflow', async () => {
   const rootDir = await mkdtemp(join(tmpdir(), 'veda-runtime-v1-'));
@@ -58,4 +60,50 @@ test('free runtime executes one rollback-protected local proof workflow', async 
 
   const proof = await readFile(join(rootDir, 'sandbox', 'proof.txt'), 'utf8');
   assert.match(proof, /Write the local runtime proof file/);
+});
+
+test('free runtime rejects signed handoffs that fail schema shape validation', async () => {
+  const rootDir = await mkdtemp(join(tmpdir(), 'veda-runtime-v1-'));
+  const hmacKey = 'test_hmac_key_for_shape_rejection';
+  const kernel = RuntimeKernel.createFree({ rootDir, hmacKey });
+  const keyPair = generateKeyPairSync('ed25519');
+
+  kernel.createDemoHandoff = () => sealHandoff({
+    schema_version: HANDOFF_SCHEMA_VERSION,
+    timestamp: new Date().toISOString(),
+    nonce: 'not-a-valid-nonce',
+    source_agent: 'ceo-veda',
+    target_agent: 'runtime-kernel',
+    task_id: 'VT-RUNTIME-V1-BAD',
+    payload: {
+      instruction: 'bad handoff',
+      context: 'test',
+      data: {},
+      constraints: []
+    },
+    governance: {
+      zte_cleared: true,
+      spe_chain_passed: true,
+      legal_cleared: true,
+      budget_cleared: true
+    },
+    DATA_STATUS: 'REAL',
+    phase: '2',
+    sovereign_key: 'veda_runtime_local_demo'
+  }, {
+    hmacKey,
+    privateKey: keyPair.privateKey
+  });
+
+  kernel.handoffKeyPair = keyPair;
+
+  await assert.rejects(
+    () => kernel.executeDemo({
+      instruction: 'Reject invalid signed handoff.',
+      workflowId: 'workflow-invalid-shape',
+      sessionScope: 'session-a',
+      memory: []
+    }),
+    /HANDOFF_INVALID: .*NONCE_INVALID.*SOVEREIGN_KEY_INVALID/
+  );
 });

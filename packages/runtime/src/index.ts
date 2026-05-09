@@ -108,12 +108,7 @@ export class RollbackEngine {
     targetPath: string;
     vedatraceSpan: string;
   }): Promise<RollbackCheckpoint> {
-    const rootPath = resolve(this.rootDir);
-    const targetPath = resolve(rootPath, input.targetPath);
-    const relativeTarget = relative(rootPath, targetPath);
-    if (relativeTarget === '..' || relativeTarget.startsWith(`..${sep}`) || isAbsolute(relativeTarget)) {
-      throw new Error('ROLLBACK_TARGET_OUTSIDE_ROOT');
-    }
+    const targetPath = this.resolveTargetPath(input.targetPath);
 
     let snapshot: { existed: boolean; content: string | null; sha256: string | null };
     try {
@@ -144,6 +139,49 @@ export class RollbackEngine {
       vedatrace_span: input.vedatraceSpan
     };
   }
+
+  async restoreFile(input: {
+    checkpoint: RollbackCheckpoint;
+    targetPath: string;
+  }): Promise<RollbackCheckpoint> {
+    if (!input.checkpoint.verified || input.checkpoint.snapshot_type !== 'FILE') {
+      throw new Error('ROLLBACK_CHECKPOINT_INVALID');
+    }
+
+    const targetPath = this.resolveTargetPath(input.targetPath);
+    const snapshot = input.checkpoint.snapshot_data as {
+      existed?: boolean;
+      content?: string | null;
+      sha256?: string | null;
+    };
+
+    if (snapshot.existed !== true || typeof snapshot.content !== 'string') {
+      throw new Error('ROLLBACK_RESTORE_UNSUPPORTED_EMPTY_SNAPSHOT');
+    }
+
+    await mkdir(dirname(targetPath), { recursive: true });
+    await writeFile(targetPath, snapshot.content, 'utf8');
+    const restoredHash = sha256(snapshot.content);
+    if (snapshot.sha256 && restoredHash !== snapshot.sha256) {
+      throw new Error('ROLLBACK_RESTORE_HASH_MISMATCH');
+    }
+
+    return {
+      ...input.checkpoint,
+      verified: true,
+      restore_test_hash: restoredHash
+    };
+  }
+
+  private resolveTargetPath(target: string): string {
+    const rootPath = resolve(this.rootDir);
+    const targetPath = resolve(rootPath, target);
+    const relativeTarget = relative(rootPath, targetPath);
+    if (relativeTarget === '..' || relativeTarget.startsWith(`..${sep}`) || isAbsolute(relativeTarget)) {
+      throw new Error('ROLLBACK_TARGET_OUTSIDE_ROOT');
+    }
+    return targetPath;
+  }
 }
 
 export class RuntimeKernel {
@@ -167,6 +205,9 @@ export class RuntimeKernel {
 
   async executeDemo(input: DemoExecutionInput): Promise<DemoExecutionResult> {
     const handoff = this.createDemoHandoff(input);
+    const shape = validateHandoffShape(handoff);
+    if (!shape.valid) throw new Error(`HANDOFF_INVALID: ${shape.errors.join(',')}`);
+
     const validation = verifyHandoffCrypto(handoff, {
       hmacKey: this.options.hmacKey,
       publicKey: this.handoffKeyPair.publicKey
@@ -265,7 +306,7 @@ export class RuntimeKernel {
 
   private createDemoHandoff(input: DemoExecutionInput): HandoffJSON_v611 {
     const timestamp = new Date().toISOString();
-    const nonce = `nonce_${randomUUID()}`;
+    const nonce = randomUUID();
     const base = {
       schema_version: HANDOFF_SCHEMA_VERSION,
       timestamp,
@@ -288,7 +329,7 @@ export class RuntimeKernel {
       },
       DATA_STATUS: 'REAL',
       phase: '2',
-      sovereign_key: 'veda_runtime_local_demo'
+      sovereign_key: 'veda_local_free'
     } satisfies Omit<HandoffJSON_v611, 'signature' | 'hmac'>;
 
     return sealHandoff(base, {

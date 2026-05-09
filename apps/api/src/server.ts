@@ -7,6 +7,9 @@ import { getEditionFeatures, type FeatureId } from '@veda-runtime-v1/pro';
 import { RuntimeKernel } from '@veda-runtime-v1/runtime';
 import { HANDOFF_SCHEMA_VERSION, PRODUCT_VERSION } from '@veda-runtime-v1/shared';
 
+export const DEFAULT_CORS_ORIGIN = 'http://localhost:3101';
+const DEMO_HMAC_KEY = 'local_api_demo_hmac_key';
+
 export interface StatusPayload {
   product: 'VEDA Runtime Version 1';
   productVersion: typeof PRODUCT_VERSION;
@@ -31,7 +34,7 @@ export async function createFreeDemoPayload(): Promise<Record<string, unknown>> 
   const rootDir = await mkdtemp(join(tmpdir(), 'veda-runtime-v1-api-'));
   const kernel = RuntimeKernel.createFree({
     rootDir,
-    hmacKey: process.env.VEDA_HMAC_KEY || 'local_api_demo_hmac_key'
+    hmacKey: resolveRuntimeHmacKey()
   });
 
   const result = await kernel.executeDemo({
@@ -99,9 +102,24 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
 function writeJson(response: ServerResponse, statusCode: number, body: unknown): void {
   response.writeHead(statusCode, {
     'content-type': 'application/json; charset=utf-8',
-    'access-control-allow-origin': process.env.VEDA_API_CORS_ORIGIN || '*'
+    'access-control-allow-origin': resolveCorsOrigin()
   });
   response.end(JSON.stringify(body, null, 2));
+}
+
+export function resolveCorsOrigin(env = process.env): string {
+  return env.VEDA_API_CORS_ORIGIN?.trim() || DEFAULT_CORS_ORIGIN;
+}
+
+export function resolveRuntimeHmacKey(env = process.env): string {
+  const configured = env.VEDA_HMAC_KEY?.trim();
+  if (configured) return configured;
+
+  if (env.VEDA_RUNTIME_MODE === 'production' || env.NODE_ENV === 'production') {
+    throw new Error('VEDA_HMAC_KEY_REQUIRED');
+  }
+
+  return DEMO_HMAC_KEY;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

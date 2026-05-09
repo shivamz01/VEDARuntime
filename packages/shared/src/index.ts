@@ -158,6 +158,7 @@ const VALID_PHASES = new Set<string>(['1', '2']);
 // CR1: Format enforcement for nonces
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const HEX_32 = /^[0-9a-f]{32,}$/i;
+const PRO_SOVEREIGN_KEY = /^veda_pro_[0-9a-f]{32,}$/i;
 
 export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): ValidationResult {
   const errors: string[] = [];
@@ -185,7 +186,7 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
   }
 
   for (const key of REQUIRED_HANDOFF_KEYS) {
-    if (key === 'DATA_STATUS' || key === 'nonce') continue; // Handled above
+    if (key === 'DATA_STATUS' || key === 'nonce' || key === 'sovereign_key') continue; // Handled above
     if (!(key in handoff)) errors.push(`MISSING_${key}`);
   }
 
@@ -220,12 +221,14 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
   }
 
   // H1: Sovereign key tier verification
-  if (typeof handoff.sovereign_key !== 'string') {
+  if (!('sovereign_key' in handoff)) {
+    errors.push('SOVEREIGN_KEY_MISSING');
+  } else if (typeof handoff.sovereign_key !== 'string') {
     errors.push('SOVEREIGN_KEY_INVALID');
   } else {
     const sk = handoff.sovereign_key;
     const isFree = sk === 'veda_local_free';
-    const isPro = sk.startsWith('veda_pro_') && sk.length >= 41; // veda_pro_ + 32 hex
+    const isPro = PRO_SOVEREIGN_KEY.test(sk);
     if (!isFree && !isPro) errors.push('SOVEREIGN_KEY_INVALID');
   }
 

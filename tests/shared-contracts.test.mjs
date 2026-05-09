@@ -14,7 +14,7 @@ function validUnsignedHandoff(overrides = {}) {
   return {
     schema_version: 'v6.1.1',
     timestamp: new Date().toISOString(),
-    nonce: 'nonce_test_001',
+    nonce: '7f44f889-41f4-47d7-9133-f0d5f7e6a23a',
     source_agent: 'ceo-veda',
     target_agent: 'runtime-worker',
     task_id: 'VT-RUNTIME-001',
@@ -32,7 +32,7 @@ function validUnsignedHandoff(overrides = {}) {
     },
     DATA_STATUS: 'REAL',
     phase: '2',
-    sovereign_key: 'veda_runtime_test',
+    sovereign_key: 'veda_local_free',
     ...overrides
   };
 }
@@ -52,6 +52,29 @@ test('handoff validation rejects forbidden analysis-only pipeline status', () =>
 
   assert.equal(result.valid, false);
   assert.ok(result.errors.includes('FORBIDDEN_FIELD_pipeline_status'));
+});
+
+test('handoff validation accepts canonical free and pro sovereign keys', () => {
+  const free = validateHandoffShape({
+    ...sealForShape(validUnsignedHandoff()),
+  });
+  const pro = validateHandoffShape({
+    ...sealForShape(validUnsignedHandoff({
+      sovereign_key: 'veda_pro_0123456789abcdef0123456789abcdef'
+    })),
+  });
+
+  assert.equal(free.valid, true, free.errors.join(','));
+  assert.equal(pro.valid, true, pro.errors.join(','));
+});
+
+test('handoff validation rejects non-canonical runtime sovereign keys', () => {
+  const result = validateHandoffShape(sealForShape(validUnsignedHandoff({
+    sovereign_key: 'veda_runtime_local_demo'
+  })));
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.includes('SOVEREIGN_KEY_INVALID'));
 });
 
 test('handoff crypto accepts ed25519 signed payload with matching HMAC', () => {
@@ -107,3 +130,11 @@ test('handoff crypto rejects tampered payloads and HMAC values', () => {
   assert.equal(hmacResult.valid, false);
   assert.ok(hmacResult.errors.includes('HMAC_INVALID'));
 });
+
+function sealForShape(unsigned) {
+  const keyPair = generateKeyPairSync('ed25519');
+  return sealHandoff(unsigned, {
+    hmacKey: 'test_hmac_key_for_shape_validation',
+    privateKey: keyPair.privateKey
+  });
+}

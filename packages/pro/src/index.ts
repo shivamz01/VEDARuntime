@@ -5,7 +5,7 @@ import {
   type VedaTraceSpan
 } from '@veda-runtime-v1/shared';
 import { Buffer } from 'node:buffer';
-import { createHmac, generateKeyPairSync, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, generateKeyPairSync, randomUUID, timingSafeEqual } from 'node:crypto';
 
 // ─── Editions & Features (API dependency) ─────────────────────────────
 export type Edition = 'free' | 'paid';
@@ -536,6 +536,7 @@ import {
   HANDOFF_SCHEMA_VERSION,
   PRODUCT_VERSION,
   sealHandoff,
+  validateHandoffShape,
   verifyHandoffCrypto,
   type HandoffJSON_v611
 } from '@veda-runtime-v1/shared';
@@ -570,6 +571,9 @@ export class PaidRuntimeKernel {
 
   async executeDemo(input: DemoExecutionInput): Promise<DemoExecutionResult> {
     const handoff = this.createPaidHandoff(input);
+    const shape = validateHandoffShape(handoff);
+    if (!shape.valid) throw new Error(`HANDOFF_INVALID: ${shape.errors.join(',')}`);
+
     const validation = verifyHandoffCrypto(handoff, {
       hmacKey: this.options.hmacKey,
       publicKey: this.handoffKeyPair.publicKey
@@ -697,7 +701,8 @@ export class PaidRuntimeKernel {
 
   private createPaidHandoff(input: DemoExecutionInput): HandoffJSON_v611 {
     const timestamp = new Date().toISOString();
-    const nonce = `nonce_paid_${randomUUID()}`;
+    const nonce = randomUUID();
+    const sovereignKey = `veda_pro_${createHash('sha256').update(input.workflowId).digest('hex').slice(0, 32)}`;
     const base = {
       schema_version: HANDOFF_SCHEMA_VERSION,
       timestamp,
@@ -721,7 +726,7 @@ export class PaidRuntimeKernel {
       },
       DATA_STATUS: 'REAL',
       phase: '2',
-      sovereign_key: 'veda_runtime_paid_demo'
+      sovereign_key: sovereignKey
     } satisfies Omit<HandoffJSON_v611, 'signature' | 'hmac'>;
 
     return sealHandoff(base, {

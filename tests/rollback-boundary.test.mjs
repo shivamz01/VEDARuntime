@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -42,4 +42,28 @@ test('rollback checkpoint still accepts files inside the runtime root', async ()
 
   assert.equal(checkpoint.verified, true);
   assert.equal(checkpoint.snapshot_type, 'FILE');
+});
+
+test('rollback engine restores an existing file from a verified checkpoint', async () => {
+  const rootDir = await mkdtemp(join(tmpdir(), 'veda-runtime-root-'));
+  const insideFile = join(rootDir, 'sandbox', 'restore.txt');
+  await mkdir(join(rootDir, 'sandbox'), { recursive: true });
+  await writeFile(insideFile, 'before-change', 'utf8');
+
+  const engine = new RollbackEngine(rootDir);
+  const checkpoint = await engine.checkpointFile({
+    workflowId: 'wf-restore',
+    stepId: 'checkpoint',
+    targetPath: insideFile,
+    vedatraceSpan: 'span-restore'
+  });
+  await writeFile(insideFile, 'after-change', 'utf8');
+
+  const restored = await engine.restoreFile({
+    checkpoint,
+    targetPath: insideFile
+  });
+
+  assert.equal(restored.verified, true);
+  assert.equal(await readFile(insideFile, 'utf8'), 'before-change');
 });
