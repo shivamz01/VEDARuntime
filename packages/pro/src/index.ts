@@ -267,7 +267,7 @@ export class SupabaseAuditLedger {
       workflow_id: input.workflow_id,
       ...(input.step_id ? { step_id: input.step_id } : {}),
       agent_name: input.agent_name,
-      agent_version: '1.0.0',
+      agent_version: '1.1.0',
       event_type: input.event_type,
       timestamp: new Date().toISOString(),
       status: input.status,

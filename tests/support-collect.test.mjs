@@ -58,7 +58,7 @@ test("collectSupportBundle writes a safe support artifact", async () => {
     path.join(root, "package.json"),
     JSON.stringify({
       name: "@veda/runtime",
-      version: "1.0.0",
+      version: "1.1.0",
       scripts: { test: "node --test" },
     }),
   );

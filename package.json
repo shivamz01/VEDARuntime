@@ -1,6 +1,6 @@
 {
   "name": "veda-runtime-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Enterprise-grade AI execution kernel. Deterministic orchestration, cryptographic audit ledgers, rollback checkpoints, and strict governance for safe LLM agent workflows.",
