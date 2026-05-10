@@ -21,9 +21,12 @@ import {
 import { LocalAuditLedger, LocalNonceRegistry } from '@veda-runtime-v1/audit';
 import { ShellPolicy } from '@veda-runtime-v1/sandbox';
 
+import { EXECUTION_PROFILES, type ExecutionProfile } from '@veda-runtime-v1/shared';
+
 export interface CreateFreeRuntimeOptions {
   rootDir: string;
   hmacKey: string;
+  executionProfile?: ExecutionProfile;
 }
 
 export interface DemoExecutionInput {
@@ -191,9 +194,12 @@ export class RuntimeKernel {
   private readonly auditLedger: LocalAuditLedger;
   private readonly shellPolicy = new ShellPolicy();
   private readonly handoffKeyPair = generateKeyPairSync('ed25519');
+  private readonly executionProfile: ExecutionProfile;
+  private lastExecutionEndMs: number = 0;
 
   private constructor(private readonly options: CreateFreeRuntimeOptions) {
     if (!options.hmacKey) throw new Error('VEDA_HMAC_KEY_REQUIRED');
+    this.executionProfile = options.executionProfile ?? EXECUTION_PROFILES.local_safe;
     this.rollbackEngine = new RollbackEngine(options.rootDir);
     this.nonceRegistry = LocalNonceRegistry.inRoot(options.rootDir);
     this.auditLedger = LocalAuditLedger.inRoot(options.rootDir, options.hmacKey);
@@ -204,6 +210,7 @@ export class RuntimeKernel {
   }
 
   async executeDemo(input: DemoExecutionInput): Promise<DemoExecutionResult> {
+    await this.throttle();
     const handoff = this.createDemoHandoff(input);
     const shape = validateHandoffShape(handoff);
     if (!shape.valid) throw new Error(`HANDOFF_INVALID: ${shape.errors.join(',')}`);
@@ -294,7 +301,7 @@ export class RuntimeKernel {
       metadata: { data_status: 'REAL' }
     }));
 
-    return {
+    const result: DemoExecutionResult = {
       status: 'COMPLETED',
       dataStatus: 'REAL',
       context,
@@ -302,6 +309,23 @@ export class RuntimeKernel {
       spans,
       auditRows: await this.auditLedger.readAll()
     };
+
+    this.lastExecutionEndMs = Date.now();
+    return result;
+  }
+
+  private async throttle(): Promise<void> {
+    const cooldownMs = this.executionProfile.cooldown_seconds * 1000;
+    if (cooldownMs <= 0) return;
+
+    const now = Date.now();
+    const elapsed = now - this.lastExecutionEndMs;
+    const remaining = cooldownMs - elapsed;
+
+    if (this.lastExecutionEndMs > 0 && remaining > 0) {
+      // Enforcement of cooldown spec
+      await new Promise(resolve => setTimeout(resolve, remaining));
+    }
   }
 
   private createDemoHandoff(input: DemoExecutionInput): HandoffJSON_v611 {

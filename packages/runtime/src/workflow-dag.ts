@@ -28,10 +28,11 @@ export class WorkflowDAG {
     });
   }
 
-  getExecutableSteps(): WorkflowStep[] {
+  getExecutableSteps(limit: number = Infinity): WorkflowStep[] {
     const executable: WorkflowStep[] = [];
     
     for (const step of this.steps.values()) {
+      if (executable.length >= limit) break;
       if (step.state !== 'PENDING' && step.state !== 'FAILED') continue;
       if (step.state === 'FAILED' && step.retryCount >= step.maxRetries) continue;
 

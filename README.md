@@ -72,8 +72,23 @@ Anything that does not pass this end-to-end chain is `SPEC_ONLY`, `PARTIAL`, or 
 - **Rate-Limited API Surface** — status and execution demo endpoints are protected from request flooding.
 - **No Wildcard CORS** — `VEDA_API_CORS_ORIGIN=*` is rejected.
 - **No Simulation as Production** — `DATA_STATUS: SIMULATED` cannot claim production readiness.
-- **One Agent at a Time** — no parallel dispatch in v1.x; sequential, deterministic execution only.
+- **Configurable Execution Profiles** — choose between `local_safe`, `standard`, and `pro_cloud` based on hardware and workflow requirements.
 - **Real Pro Persistence Proof** — Pro persistence is verified with real Supabase insert/readback via `npm run pro:verify`.
+
+---
+
+## Execution Profiles
+
+VEDA Runtime supports three distinct execution profiles to balance safety, performance, and hardware constraints.
+
+| Profile | Concurrency | Cooldown | Purpose |
+|---|---|---|---|
+| **Local Safe** | 1 (Sequential) | 8 sec | Low CPU/GPU machines; maximum safety (Default) |
+| **Standard** | 2–8 Parallel | 0 sec | Normal developer machines; balanced throughput |
+| **Pro Cloud** | 32+ Bounded | 0 sec | Cloud-native scaling; dependency-aware high-concurrency |
+
+> [!IMPORTANT]
+> The **Local Safe** profile enforces a mandatory 8-second CPU/GPU cool-down between agent executions to prevent resource exhaustion and recursive hallucination loops on limited hardware.
 
 ---
 

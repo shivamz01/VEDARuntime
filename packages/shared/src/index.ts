@@ -16,6 +16,35 @@ export type AgentTier = 'CORE' | 'EXECUTIVE' | 'DEPT_LEAD' | 'WORKER' | 'SECURIT
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type SpanStatus = 'SUCCESS' | 'FAILURE' | 'BLOCKED' | 'TIMEOUT';
 export type SourceType = 'USER' | 'AGENT' | 'TOOL' | 'MEMORY' | 'DOC';
+export type ExecutionProfileId = 'local_safe' | 'standard' | 'pro_cloud';
+
+export interface ExecutionProfile {
+  id: ExecutionProfileId;
+  max_parallel_agents: number;
+  cooldown_seconds: number;
+  dependency_aware: boolean;
+}
+
+export const EXECUTION_PROFILES: Record<ExecutionProfileId, ExecutionProfile> = {
+  local_safe: {
+    id: 'local_safe',
+    max_parallel_agents: 1,
+    cooldown_seconds: 8,
+    dependency_aware: false
+  },
+  standard: {
+    id: 'standard',
+    max_parallel_agents: 8,
+    cooldown_seconds: 0,
+    dependency_aware: true
+  },
+  pro_cloud: {
+    id: 'pro_cloud',
+    max_parallel_agents: 32, // Bounded but high
+    cooldown_seconds: 0,
+    dependency_aware: true
+  }
+};
 
 export interface HandoffJSON_v611 {
   schema_version: typeof HANDOFF_SCHEMA_VERSION;
