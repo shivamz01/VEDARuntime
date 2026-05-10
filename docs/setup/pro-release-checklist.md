@@ -7,7 +7,7 @@ This checklist must be completed before VEDA Runtime `v1.1.0-pro-persistence` is
 ## 1. Persistence Verification
 
 - [x] Local Pro smoke test passes (`npm run pro:verify`)
-- [ ] GitHub Actions manual Pro smoke test passes with repository secrets
+- [x] GitHub Actions manual Pro smoke test passes with repository secrets
 - [x] Real Supabase `nonce_registry` insert verified
 - [x] Real Supabase `audit_ledger` writes verified
 - [x] Real Supabase `pipeline_log` write verified
@@ -33,13 +33,13 @@ Required Pro proof output:
  - [ ] Workflow is manual-only (workflow_dispatch)
  - [ ] Workflow permissions restricted to contents: read
  - [ ] Workflow has timeout protection
- - [ ] Required secrets configured:
- - [ ] SUPABASE_URL
- - [ ] SUPABASE_SERVICE_KEY
- - [ ] VEDA_HMAC_KEY
- - [ ] VEDA_LICENSE_SECRET
- - [ ] Manual workflow passes in GitHub Actions
- - [ ] No secrets printed in logs
+ - [x] Required secrets configured:
+ - [x] SUPABASE_URL
+ - [x] SUPABASE_SERVICE_KEY
+ - [x] VEDA_HMAC_KEY
+ - [x] VEDA_LICENSE_SECRET
+ - [x] Manual workflow passes in GitHub Actions
+ - [x] No secrets printed in logs
 
 ## 3. API Hardening
 - [ ] Rate limiting implemented for `/status`
@@ -57,11 +57,11 @@ Required Pro proof output:
 - [ ] Support bundle collector includes latest Pro verification artifact or clearly states Pro state is not verified
 
 ## 4. Final Release
-- [ ] GitHub Actions build green on `main`
-- [ ] Pro persistence proof passed
-- [ ] npm run release:check passes locally
+- [x] GitHub Actions build green on `main`
+- [x] Pro persistence proof passed
+- [x] npm run release:check passes locally
 - [ ] npm run pro:verify passes locally
-- [ ] GitHub Actions release check passes on main
-- [ ] GitHub manual Pro smoke workflow passes
-- [ ] KI-001 marked resolved after GitHub Pro smoke pass
-- [ ] Release tag `v1.1.0-pro-persistence` pushed
+- [x] GitHub Actions release check passes on main
+- [x] GitHub manual Pro smoke workflow passes
+- [x] KI-001 marked resolved after GitHub Pro smoke pass
+- [x] Release tag `v1.1.0-pro-persistence` pushed
