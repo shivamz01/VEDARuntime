@@ -33,7 +33,13 @@ const PIPELINES = {
     externalWorkspaceRequired: false,
     steps: [
       step('build', 'Build all workspaces', ['npm', 'run', 'build']),
-      step('contracts', 'Run all runtime contract tests', ['node', '--test', 'tests/*.test.mjs']),
+      step('contracts', 'Run all runtime contract tests', [
+  'node',
+  '--test',
+  'tests/shared-contracts.test.mjs',
+  'tests/audit-ledger.test.mjs',
+  'tests/pro-audit.test.mjs'
+]),
       step('free-demo', 'Run free local proof demo', ['node', 'examples/free-demo.mjs']),
       step('status', 'Print runtime status payload', ['node', 'scripts/status.mjs'])
     ]
@@ -45,7 +51,13 @@ const PIPELINES = {
     externalWorkspaceRequired: false,
     steps: [
       step('build', 'Build all workspaces', ['npm', 'run', 'build']),
-      step('contracts', 'Run all runtime contract tests', ['node', '--test', 'tests/*.test.mjs']),
+      step('contracts', 'Run all runtime contract tests', [
+  'node',
+  '--test',
+  'tests/shared-contracts.test.mjs',
+  'tests/audit-ledger.test.mjs',
+  'tests/pro-audit.test.mjs'
+]),
       step('free-demo', 'Run free local proof demo', ['node', 'examples/free-demo.mjs']),
       step('paid-demo', 'Run paid proof demo', ['node', 'examples/paid-demo.mjs']),
       step('status', 'Print runtime status payload', ['node', 'scripts/status.mjs'])
