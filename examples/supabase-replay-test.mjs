@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { SupabaseNonceRegistry } from '../packages/pro/dist/index.js';
+import { SupabaseNonceRegistry, DuplicateNonceError } from '../packages/pro/dist/index.js';
 import crypto from 'node:crypto';
 
 async function runReplayTest() {
@@ -15,26 +15,36 @@ async function runReplayTest() {
   const registry = new SupabaseNonceRegistry(supabase);
 
   const nonce = crypto.randomUUID();
+  const record = {
+    nonce,
+    created_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 300_000).toISOString(),
+    source_agent: 'replay-tester'
+  };
 
   console.log(`Step 1: Inserting first nonce: ${nonce}`);
-  const firstInsert = await registry.consume(nonce);
-  console.log(`First insert: ${firstInsert ? 'SUCCESS' : 'FAILED'}`);
-
-  if (!firstInsert) {
-    console.error('First insert should have succeeded');
+  try {
+    await registry.insert(record);
+    console.log('First insert: SUCCESS');
+  } catch (error) {
+    console.error('First insert failed:', error.message);
     process.exit(1);
   }
 
   console.log(`Step 2: Attempting to replay the same nonce: ${nonce}`);
-  const secondInsert = await registry.consume(nonce);
-  console.log(`Second insert (replay): ${secondInsert ? 'SUCCESS' : 'REJECTED'}`);
-
-  if (secondInsert) {
+  try {
+    await registry.insert(record);
     console.error('FAILED: Replay attack was successful! Nonce should have been rejected.');
     process.exit(1);
+  } catch (error) {
+    if (error instanceof DuplicateNonceError || error.message.includes('NONCE_REPLAY')) {
+      console.log('Second insert (replay): REJECTED (Correct)');
+      console.log('SUCCESS: Replay attack correctly rejected by Supabase nonce registry.');
+    } else {
+      console.error('FAILED: Unexpected error during replay:', error.message);
+      process.exit(1);
+    }
   }
-
-  console.log('SUCCESS: Replay attack correctly rejected by Supabase nonce registry.');
 }
 
 runReplayTest().catch(console.error);

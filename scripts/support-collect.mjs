@@ -6,7 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
-const DEFAULT_ENV_KEYS = ['VEDA_HMAC_KEY', 'SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
+
+const DEFAULT_ENV_KEYS = [
+  'VEDA_HMAC_KEY',
+  'SUPABASE_URL',
+  'SUPABASE_SERVICE_KEY',
+  'VEDA_LICENSE_SECRET',
+  'VEDA_LICENSE_KEY'
+];
 
 export function getEnvPresence(env = process.env, keys = DEFAULT_ENV_KEYS) {
   return Object.fromEntries(
@@ -58,9 +65,60 @@ export async function readLatestPipelineArtifacts(logsDir, limit = 5) {
             id: step.id ?? null,
             name: step.name ?? null,
             status: step.status ?? null,
-            exitCode: Number.isInteger(step.exitCode) ? step.exitCode : null,
+            exitCode: Number.isInteger(step.exitCode) ? step.exitCode : null
           }))
-        : [],
+        : []
+    });
+  }
+
+  return summaries;
+}
+
+export async function readLatestProVerificationArtifacts(logsDir, limit = 3) {
+  let entries;
+  try {
+    entries = await readdir(logsDir, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+
+  const candidates = await Promise.all(
+    entries
+      .filter(entry =>
+        entry.isFile() &&
+        /^(pro-verify|paid-supabase-smoke|pro-smoke).+\.json$/i.test(entry.name)
+      )
+      .map(async entry => {
+        const artifactPath = join(logsDir, entry.name);
+        const metadata = await stat(artifactPath);
+        return { artifactPath, fileName: entry.name, modifiedAtMs: metadata.mtimeMs };
+      })
+  );
+
+  const latest = candidates
+    .sort((left, right) => right.modifiedAtMs - left.modifiedAtMs)
+    .slice(0, limit);
+
+  const summaries = [];
+  for (const candidate of latest) {
+    const artifact = await readJson(candidate.artifactPath);
+    if (!artifact) {
+      continue;
+    }
+
+    summaries.push({
+      fileName: candidate.fileName,
+      status: artifact.status ?? null,
+      supabase: artifact.supabase ?? null,
+      workflowId: artifact.workflowId ?? null,
+      nonceInserted: artifact.nonceInserted ?? null,
+      auditSpanCount: Number.isInteger(artifact.auditSpanCount) ? artifact.auditSpanCount : null,
+      pipelineLogWritten: artifact.pipelineLogWritten ?? null,
+      auditBundleValid: artifact.auditBundleValid ?? null,
+      rollbackVerified: artifact.rollbackVerified ?? null
     });
   }
 
@@ -78,11 +136,18 @@ export async function collectSupportBundle(options = {}) {
   await mkdir(artifactDir, { recursive: true });
 
   const packageJson = (await readJson(join(cwd, 'package.json'))) ?? {};
-  const pipelineArtifacts = await readLatestPipelineArtifacts(join(cwd, 'logs'));
+  const logsDir = join(cwd, 'logs');
+
+  const pipelineArtifacts = await readLatestPipelineArtifacts(logsDir);
+  const proVerificationArtifacts = await readLatestProVerificationArtifacts(logsDir);
+
   const nodeVersion = await runOptional(commandRunner, 'node', ['--version'], cwd);
   const npmVersion = await runOptional(commandRunner, 'npm', ['--version'], cwd);
   const gitCommit = await runOptional(commandRunner, 'git', ['rev-parse', '--short', 'HEAD'], cwd);
+  const gitBranch = await runOptional(commandRunner, 'git', ['rev-parse', '--abbrev-ref', 'HEAD'], cwd);
+
   const envPresence = getEnvPresence(env);
+  const latestProArtifact = proVerificationArtifacts[0] ?? null;
 
   const bundle = {
     product: 'VEDA Runtime Version 1',
@@ -92,7 +157,7 @@ export async function collectSupportBundle(options = {}) {
       name: packageJson.name ?? null,
       version: packageJson.version ?? null,
       private: packageJson.private ?? null,
-      license: packageJson.license ?? null,
+      license: packageJson.license ?? null
     },
     environment: {
       platform: process.platform,
@@ -102,26 +167,34 @@ export async function collectSupportBundle(options = {}) {
       nodeVersion,
       npmVersion,
       gitCommit,
-      envPresence,
+      gitBranch,
+      envPresence
     },
     scripts: packageJson.scripts ?? {},
     pipelineArtifacts,
+    proVerificationArtifacts,
     proVerification: {
-      edition: packageJson.version?.includes('pro') ? 'pro' : 'core',
-      supabaseWired: envPresence.SUPABASE_URL && envPresence.SUPABASE_SERVICE_KEY,
-      hmacWired: envPresence.VEDA_HMAC_KEY,
-      licenseSecretWired: !!env.VEDA_LICENSE_SECRET,
-      lastProVerifyStatus: pipelineArtifacts.find(p => p.pipeline === 'pro-verify')?.status ?? 'NOT_RUN'
+      evidenceLevel: latestProArtifact ? 'LOCAL_ARTIFACT_SUMMARY' : 'ENVIRONMENT_PRESENCE_ONLY',
+      realSupabaseVerifiedByBundle: false,
+      note: latestProArtifact
+        ? 'This bundle found a local Pro verification artifact summary. It still does not query Supabase or expose secrets.'
+        : 'This bundle does not run pro:verify and does not query Supabase. It records only whether Pro-related environment variables are present.',
+      supabaseEnvConfigured: Boolean(envPresence.SUPABASE_URL && envPresence.SUPABASE_SERVICE_KEY),
+      hmacWired: Boolean(envPresence.VEDA_HMAC_KEY),
+      licenseSecretWired: Boolean(envPresence.VEDA_LICENSE_SECRET),
+      licenseKeyWired: Boolean(envPresence.VEDA_LICENSE_KEY),
+      latestLocalProArtifact: latestProArtifact
     },
     supportBoundary: {
       includesSecrets: false,
       includesCustomerData: false,
-      note: 'This bundle intentionally records only environment key presence, never environment values.',
-    },
+      note: 'This bundle intentionally records only environment key presence and artifact summaries, never environment values.'
+    }
   };
 
   const artifactPath = join(artifactDir, `support-bundle-${safeTimestamp(generatedAt)}.json`);
   await writeFile(artifactPath, `${JSON.stringify(bundle, null, 2)}\n`, 'utf8');
+
   return { bundle, artifactPath };
 }
 
@@ -147,18 +220,24 @@ async function runOptional(commandRunner, command, args, cwd) {
 
 function defaultCommandRunner(command, args, cwd) {
   return new Promise((resolveRunner, rejectRunner) => {
-    execFile(command, args, {
-      cwd,
-      shell: false,
-      windowsHide: true,
-      timeout: 10000,
-    }, (error, stdout, stderr) => {
-      if (error) {
-        rejectRunner(new Error(stderr || error.message));
-        return;
+    execFile(
+      command,
+      args,
+      {
+        cwd,
+        shell: false,
+        windowsHide: true,
+        timeout: 10_000
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          rejectRunner(new Error(stderr || error.message));
+          return;
+        }
+
+        resolveRunner(stdout);
       }
-      resolveRunner(stdout);
-    });
+    );
   });
 }
 
@@ -187,6 +266,7 @@ if (isDirectRun) {
         envPresence: bundle.environment.envPresence,
         proVerification: bundle.proVerification,
         pipelineArtifactCount: bundle.pipelineArtifacts.length,
+        proVerificationArtifactCount: bundle.proVerificationArtifacts.length
       }, null, 2));
     })
     .catch(error => {

@@ -35,17 +35,15 @@ This checklist must be completed before VEDA Runtime `v1.1.0-pro-persistence` is
 
 - [x] `.github/workflows/pro-smoke.yml` added
 - [x] Workflow is manual-only (`workflow_dispatch`)
-- [x] .github/workflows/pro-smoke.yml added
- Workflow is manual-only (workflow_dispatch)
- Workflow permissions restricted to contents: read
- Workflow has timeout protection
- Required secrets configured:
- SUPABASE_URL
- SUPABASE_SERVICE_KEY
- VEDA_HMAC_KEY
- VEDA_LICENSE_SECRET
- Manual workflow passes in GitHub Actions
- No secrets printed in logs
+- [x] Workflow permissions restricted to `contents: read`
+- [x] Workflow has timeout protection
+- [x] Required secrets configured:
+-       [x] SUPABASE_URL
+-       [x] SUPABASE_SERVICE_KEY
+-       [x] VEDA_HMAC_KEY
+-       [x] VEDA_LICENSE_SECRET
+- [x] Manual workflow passes in GitHub Actions
+- [x] No secrets printed in logs
 
 ---
 
@@ -54,7 +52,8 @@ This checklist must be completed before VEDA Runtime `v1.1.0-pro-persistence` is
 - [x] Rate limiting implemented for `/api/status`
 - [x] Rate limiting implemented for `/api/demo/free`
 - [x] Missing `Origin` header rejected in production
-- [x] Startup failure if `VEDA_HMAC_KEY` is missing in production
+- [x] `/health` remains available for uptime checks
+- [x]  Startup failure if `VEDA_HMAC_KEY` is missing in production
 - [x] Wildcard CORS rejected in production
 - [ ] Dedicated `/execute` endpoint rate limiting, when `/execute` is added
 
@@ -68,6 +67,7 @@ This checklist must be completed before VEDA Runtime `v1.1.0-pro-persistence` is
 - [x] `README.md` updated with Pro hardening details
 - [x] `README.md` updated with Pro persistence verification details
 - [x] `README.md` clearly separates Free v1.0 from Pro v1.1 capabilities
+- [x] KNOWN_ISSUES.md updated with KI-001 resolved
 - [x] Support bundle collector includes latest Pro verification artifact or clearly states Pro state is not verified
 
 ---
