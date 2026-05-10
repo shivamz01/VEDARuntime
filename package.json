@@ -37,7 +37,8 @@
     "support:collect": "node scripts/support-collect.mjs",
     "status": "node scripts/status.mjs",
     "demo:paid:supabase": "npm run build && node examples/paid-supabase-smoke.mjs",
-    "pro:verify": "npm run demo:paid:supabase"
+    "pro:verify": "npm run demo:paid:supabase && npm run pro:replay",
+    "pro:replay": "npm run build && node examples/paid-supabase-replay-test.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
