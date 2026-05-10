@@ -82,6 +82,7 @@ export async function collectSupportBundle(options = {}) {
   const nodeVersion = await runOptional(commandRunner, 'node', ['--version'], cwd);
   const npmVersion = await runOptional(commandRunner, 'npm', ['--version'], cwd);
   const gitCommit = await runOptional(commandRunner, 'git', ['rev-parse', '--short', 'HEAD'], cwd);
+  const envPresence = getEnvPresence(env);
 
   const bundle = {
     product: 'VEDA Runtime Version 1',
@@ -101,10 +102,17 @@ export async function collectSupportBundle(options = {}) {
       nodeVersion,
       npmVersion,
       gitCommit,
-      envPresence: getEnvPresence(env),
+      envPresence,
     },
     scripts: packageJson.scripts ?? {},
     pipelineArtifacts,
+    proVerification: {
+      edition: packageJson.version?.includes('pro') ? 'pro' : 'core',
+      supabaseWired: envPresence.SUPABASE_URL && envPresence.SUPABASE_SERVICE_KEY,
+      hmacWired: envPresence.VEDA_HMAC_KEY,
+      licenseSecretWired: !!env.VEDA_LICENSE_SECRET,
+      lastProVerifyStatus: pipelineArtifacts.find(p => p.pipeline === 'pro-verify')?.status ?? 'NOT_RUN'
+    },
     supportBoundary: {
       includesSecrets: false,
       includesCustomerData: false,
@@ -177,6 +185,7 @@ if (isDirectRun) {
         artifactPath,
         project: bundle.project,
         envPresence: bundle.environment.envPresence,
+        proVerification: bundle.proVerification,
         pipelineArtifactCount: bundle.pipelineArtifacts.length,
       }, null, 2));
     })
