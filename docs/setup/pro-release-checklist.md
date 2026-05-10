@@ -29,10 +29,10 @@ Required Pro proof output:
         }
 
 ## 2. GitHub Actions Pro Smoke
- - [ ] .github/workflows/pro-smoke.yml added
- - [ ] Workflow is manual-only (workflow_dispatch)
- - [ ] Workflow permissions restricted to contents: read
- - [ ] Workflow has timeout protection
+ - [x] .github/workflows/pro-smoke.yml added
+ - [x] Workflow is manual-only (workflow_dispatch)
+ - [x] Workflow permissions restricted to contents: read
+ - [x] Workflow has timeout protection
  - [x] Required secrets configured:
  - [x] SUPABASE_URL
  - [x] SUPABASE_SERVICE_KEY
@@ -42,10 +42,10 @@ Required Pro proof output:
  - [x] No secrets printed in logs
 
 ## 3. API Hardening
-- [ ] Rate limiting implemented for `/status`
-- [ ] Rate limiting implemented for `/execute`
-- [ ] Missing `Origin` header rejected in production
-- [ ] Startup failure if `VEDA_HMAC_KEY` is missing in production
+- [x] Rate limiting implemented for `/status`
+- [x] Rate limiting implemented for `/execute`
+- [x] Missing `Origin` header rejected in production
+- [x] Startup failure if `VEDA_HMAC_KEY` is missing in production
 
 ## 3. Documentation & Governance
 - [x] Supabase Pro setup guide updated
