@@ -1,50 +1,119 @@
 import { createClient } from '@supabase/supabase-js';
-import { SupabaseNonceRegistry, DuplicateNonceError } from '../packages/pro/dist/index.js';
+import { readFile } from 'node:fs/promises';
 import crypto from 'node:crypto';
 
-async function runReplayTest() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_KEY;
+import {
+  DuplicateNonceError,
+  SupabaseNonceRegistry
+} from '../packages/pro/dist/index.js';
 
-  if (!url || !key) {
-    console.error('SUPABASE_URL and SUPABASE_SERVICE_KEY are required');
-    process.exit(1);
-  }
-
-  const supabase = createClient(url, key);
-  const registry = new SupabaseNonceRegistry(supabase);
-
-  const nonce = crypto.randomUUID();
-  const record = {
-    nonce,
-    created_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 300_000).toISOString(),
-    source_agent: 'replay-tester'
-  };
-
-  console.log(`Step 1: Inserting first nonce: ${nonce}`);
+async function loadEnvLocal() {
   try {
-    await registry.insert(record);
-    console.log('First insert: SUCCESS');
-  } catch (error) {
-    console.error('First insert failed:', error.message);
-    process.exit(1);
-  }
+    const raw = await readFile('.env.local', 'utf8');
 
-  console.log(`Step 2: Attempting to replay the same nonce: ${nonce}`);
-  try {
-    await registry.insert(record);
-    console.error('FAILED: Replay attack was successful! Nonce should have been rejected.');
-    process.exit(1);
-  } catch (error) {
-    if (error instanceof DuplicateNonceError || error.message.includes('NONCE_REPLAY')) {
-      console.log('Second insert (replay): REJECTED (Correct)');
-      console.log('SUCCESS: Replay attack correctly rejected by Supabase nonce registry.');
-    } else {
-      console.error('FAILED: Unexpected error during replay:', error.message);
-      process.exit(1);
+    for (const line of raw.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      const index = trimmed.indexOf('=');
+      if (index === -1) continue;
+
+      const key = trimmed.slice(0, index).trim();
+      const value = trimmed.slice(index + 1).trim();
+
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
     }
+  } catch {
+    // .env.local is optional when env vars are already exported.
   }
 }
 
-runReplayTest().catch(console.error);
+await loadEnvLocal();
+
+const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'];
+
+for (const key of required) {
+  if (!process.env[key]) {
+    throw new Error(`${key}_MISSING`);
+  }
+}
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY,
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  }
+);
+
+const registry = new SupabaseNonceRegistry(supabase);
+
+const nonce = crypto.randomUUID();
+const workflowId = `replay-test-${Date.now()}`;
+const createdAt = new Date();
+const expiresAt = new Date(createdAt.getTime() + 300_000);
+
+console.log(`Step 1: inserting first nonce: ${nonce}`);
+
+const firstRecord = await registry.insert({
+  nonce,
+  created_at: createdAt.toISOString(),
+  expires_at: expiresAt.toISOString(),
+  source_agent: 'pro-replay-test',
+  workflow_id: workflowId
+});
+
+if (firstRecord.nonce !== nonce) {
+  throw new Error('FIRST_INSERT_RETURNED_WRONG_NONCE');
+}
+
+const existsAfterFirstInsert = await registry.exists(nonce);
+
+if (!existsAfterFirstInsert) {
+  throw new Error('NONCE_EXISTS_CHECK_FAILED_AFTER_FIRST_INSERT');
+}
+
+console.log('First insert: SUCCESS');
+
+console.log(`Step 2: attempting replay with same nonce: ${nonce}`);
+
+let replayRejected = false;
+let replayError = null;
+
+try {
+  await registry.insert({
+    nonce,
+    created_at: createdAt.toISOString(),
+    expires_at: expiresAt.toISOString(),
+    source_agent: 'pro-replay-test',
+    workflow_id: workflowId
+  });
+} catch (error) {
+  replayError = error;
+  replayRejected =
+    error instanceof DuplicateNonceError ||
+    error?.name === 'DuplicateNonceError' ||
+    String(error?.message ?? '').includes('NONCE_REPLAY');
+}
+
+if (!replayRejected) {
+  console.error('Replay error:', replayError);
+  throw new Error('FAILED: Replay attack was accepted. Duplicate nonce should be rejected.');
+}
+
+console.log('Second insert: REJECTED');
+
+console.log(JSON.stringify({
+  status: 'COMPLETED',
+  supabase: 'REAL',
+  workflowId,
+  nonce,
+  firstInsert: true,
+  existsAfterFirstInsert,
+  replayRejected: true
+}, null, 2));
