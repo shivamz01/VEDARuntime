@@ -23,7 +23,7 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @veda-runtime-v1/shared && npm run build -w @veda-runtime-v1/sandbox && npm run build -w @veda-runtime-v1/audit && npm run build -w @veda-runtime-v1/pro && npm run build -w @veda-runtime-v1/bridge-veda && npm run build -w @veda-runtime-v1/runtime && npm run build -w @veda-runtime-v1/api && npm run build -w @veda-runtime-v1/web",
+    "build": "npm run build -w @veda-runtime-v1/shared && npm run build -w @veda-runtime-v1/sandbox && npm run build -w @veda-runtime-v1/audit && npm run build -w @veda-runtime-v1/runtime && npm run build -w @veda-runtime-v1/pro && npm run build -w @veda-runtime-v1/bridge-veda && npm run build -w @veda-runtime-v1/api && npm run build -w @veda-runtime-v1/web",
     "test": "npm run build && node --test tests/*.test.mjs",
     "demo:free": "npm run build && node examples/free-demo.mjs",
     "demo:paid": "npm run build && node examples/paid-demo.mjs",
