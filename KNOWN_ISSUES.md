@@ -4,6 +4,19 @@ This file tracks open bugs, confirmed limitations, and deferred fixes in VEDA Ru
 
 ---
 
+## Status Snapshot
+- **Previously logged bugs:** 8
+- **Confirmed fixed before this pass:** 5
+- **Fixed in current pass:** 7
+- **Still open after current pass:** 0
+- **Current open bugs tracked here:** 0
+
+> [!NOTE]
+> Latest bugfix pipeline run (2026-05-10) confirmed 0 new bugs discovered in `veda-runtime-v1`. Trust score 100/100.
+
+
+---
+
 ## Open Issues
 
 ### KI-001 — Supabase writes not yet wired in all layers
