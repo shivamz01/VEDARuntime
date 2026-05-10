@@ -5,7 +5,6 @@ import {
   type VedaTraceSpan
 } from '@veda-runtime-v1/shared';
 import {
-  EXECUTION_PROFILES,
   getExecutionProfile,
   type ExecutionProfile,
   type ExecutionProfileId
@@ -443,6 +442,10 @@ export interface GovernanceProfile {
   relevance_threshold: number;
   require_human_approval: boolean;
   allowed_risk_levels: string[];
+  /**
+   * @deprecated Use ExecutionProfile.cooldown_seconds for runtime throttling.
+   * Governance profile cooldown is kept for legacy policy enforcement.
+   */
   cooldown_seconds: number;
   max_retries: number;
 }
@@ -722,7 +725,9 @@ export class PaidRuntimeKernel {
         errors_count: 0,
         trace_span_count: spans.length,
         metadata: {
-            profile: this.profile.id
+            profile: this.profile.id,
+            execution_profile: this.executionProfile.id,
+            max_parallel_agents: this.executionProfile.max_parallel_agents
         }
     });
 
@@ -796,7 +801,11 @@ export class PaidRuntimeKernel {
         instruction: input.instruction,
         context: 'governed-paid-demo',
         data: {},
-        constraints: ['paid-edition', 'supabase-wired']
+        constraints: [
+          'paid-edition',
+          'supabase-wired',
+          `execution-profile:${this.executionProfile.id}`
+        ]
       },
       governance: {
         zte_cleared: true,
@@ -840,6 +849,10 @@ export function createLicensedPaidRuntime(options: CreateLicensedPaidRuntimeOpti
   };
   if (options.profileId) {
     runtimeOptions.profileId = options.profileId;
+  }
+
+  if (options.executionProfileId) {
+    runtimeOptions.executionProfileId = options.executionProfileId;
   }
 
   return new PaidRuntimeKernel(runtimeOptions);
