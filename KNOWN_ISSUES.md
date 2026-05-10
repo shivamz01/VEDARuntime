@@ -8,10 +8,10 @@ This file tracks open bugs, confirmed limitations, and deferred fixes in VEDA Ru
 
 ### KI-001 — Supabase writes not yet wired in all layers
 **Severity:** Medium  
-**Status:** Open  
+**Status:** Resolved — 2026-05-10  
 **Affected:** Pro Edition — audit ledger, pipeline log  
-**Detail:** Supabase persistence adapters exist but are not connected end-to-end in all execution paths. The local JSONL ledger is the verified proof layer for v1.0. Supabase writes are a Pro extension and will be fully wired before the Pro Edition launch.  
-**Workaround:** Use `npm run demo:free` for local proof. Supabase setup docs are in `docs/setup/supabase-pro-setup.md`.
+**Detail:** Supabase persistence is now wired and verified through the Pro Supabase smoke test. The smoke test proves real nonce_registry insert, audit_ledger span writes, pipeline_log write, rollback verification, and audit bundle validation.  
+**Workaround:** None required. Pro persistence is verified.
 
 ---
 

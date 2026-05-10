@@ -35,7 +35,9 @@
     "license:issue": "npm run build && node scripts/license.mjs issue",
     "license:verify": "npm run build && node scripts/license.mjs verify",
     "support:collect": "node scripts/support-collect.mjs",
-    "status": "node scripts/status.mjs"
+    "status": "node scripts/status.mjs",
+    "demo:paid:supabase": "npm run build && node examples/paid-supabase-smoke.mjs",
+    "pro:verify": "npm run demo:paid:supabase"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",
@@ -43,5 +45,8 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.4"
   }
 }
