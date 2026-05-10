@@ -16,35 +16,73 @@ export type AgentTier = 'CORE' | 'EXECUTIVE' | 'DEPT_LEAD' | 'WORKER' | 'SECURIT
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 export type SpanStatus = 'SUCCESS' | 'FAILURE' | 'BLOCKED' | 'TIMEOUT';
 export type SourceType = 'USER' | 'AGENT' | 'TOOL' | 'MEMORY' | 'DOC';
+
 export type ExecutionProfileId = 'local_safe' | 'standard' | 'pro_cloud';
+export type QueueMode = 'sequential' | 'dependency_aware';
+export type RollbackLockingMode = 'workflow' | 'resource';
+export type AuditOrderingMode = 'deterministic';
 
 export interface ExecutionProfile {
   id: ExecutionProfileId;
   max_parallel_agents: number;
+  max_parallel_tools: number;
+  max_provider_calls: number;
   cooldown_seconds: number;
+
+  /**
+   * Kept for backwards compatibility with early profile consumers.
+   * Prefer queue_mode for new scheduler code.
+   */
   dependency_aware: boolean;
+
+  queue_mode: QueueMode;
+  rollback_locking: RollbackLockingMode;
+  audit_ordering: AuditOrderingMode;
 }
 
 export const EXECUTION_PROFILES: Record<ExecutionProfileId, ExecutionProfile> = {
   local_safe: {
     id: 'local_safe',
     max_parallel_agents: 1,
+    max_parallel_tools: 1,
+    max_provider_calls: 1,
     cooldown_seconds: 8,
-    dependency_aware: false
+    dependency_aware: true,
+    queue_mode: 'sequential',
+    rollback_locking: 'workflow',
+    audit_ordering: 'deterministic'
   },
   standard: {
     id: 'standard',
-    max_parallel_agents: 8,
+    max_parallel_agents: 4,
+    max_parallel_tools: 4,
+    max_provider_calls: 4,
     cooldown_seconds: 0,
-    dependency_aware: true
+    dependency_aware: true,
+    queue_mode: 'dependency_aware',
+    rollback_locking: 'resource',
+    audit_ordering: 'deterministic'
   },
   pro_cloud: {
     id: 'pro_cloud',
-    max_parallel_agents: 32, // Bounded but high
+    max_parallel_agents: 16,
+    max_parallel_tools: 32,
+    max_provider_calls: 24,
     cooldown_seconds: 0,
-    dependency_aware: true
+    dependency_aware: true,
+    queue_mode: 'dependency_aware',
+    rollback_locking: 'resource',
+    audit_ordering: 'deterministic'
   }
 };
+
+export function getExecutionProfile(id: ExecutionProfileId): ExecutionProfile {
+  return { ...EXECUTION_PROFILES[id] };
+}
+
+export function listExecutionProfiles(): ExecutionProfile[] {
+  return Object.values(EXECUTION_PROFILES).map(profile => ({ ...profile }));
+}
 
 export interface HandoffJSON_v611 {
   schema_version: typeof HANDOFF_SCHEMA_VERSION;
@@ -160,31 +198,34 @@ const REQUIRED_HANDOFF_KEYS = [
 
 const OPTIONAL_HANDOFF_KEYS = ['workflow_id'] as const;
 
-// M4: Compile-time assertion that all interface keys are listed
-type _AssertAllKeysListed = keyof HandoffJSON_v611 extends 
-  typeof REQUIRED_HANDOFF_KEYS[number] | typeof OPTIONAL_HANDOFF_KEYS[number] 
-  ? true : never;
+type _AssertAllKeysListed =
+  keyof HandoffJSON_v611 extends
+    typeof REQUIRED_HANDOFF_KEYS[number] | typeof OPTIONAL_HANDOFF_KEYS[number]
+    ? true
+    : never;
+
 const _check: _AssertAllKeysListed = true;
+void _check;
 
 const ALLOWED_HANDOFF_KEYS = new Set<string>([
-  ...REQUIRED_HANDOFF_KEYS, 
+  ...REQUIRED_HANDOFF_KEYS,
   ...OPTIONAL_HANDOFF_KEYS
 ]);
 
 const ALLOWED_PAYLOAD_KEYS = new Set(['instruction', 'context', 'data', 'constraints']);
+
 const ALLOWED_GOVERNANCE_KEYS = new Set([
-  'zte_cleared', 
-  'spe_chain_passed', 
-  'legal_cleared', 
-  'budget_cleared', 
-  'brand_cleared', 
+  'zte_cleared',
+  'spe_chain_passed',
+  'legal_cleared',
+  'budget_cleared',
+  'brand_cleared',
   'human_approval_required'
 ]);
 
 const VALID_DATA_STATUS = new Set<string>(['REAL', 'SIMULATED', 'PARTIAL']);
 const VALID_PHASES = new Set<string>(['1', '2']);
 
-// CR1: Format enforcement for nonces
 const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const HEX_32 = /^[0-9a-f]{32,}$/i;
 const PRO_SOVEREIGN_KEY = /^veda_pro_[0-9a-f]{32,}$/i;
@@ -198,7 +239,6 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
 
   const handoff = candidate as Record<string, unknown>;
 
-  // M1: Distinguish between missing and invalid for critical fields
   if (!('DATA_STATUS' in handoff)) {
     errors.push('DATA_STATUS_MISSING');
   } else if (!VALID_DATA_STATUS.has(String(handoff.DATA_STATUS))) {
@@ -214,12 +254,36 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
     }
   }
 
+  if (!('phase' in handoff)) {
+    errors.push('PHASE_MISSING');
+  } else if (!VALID_PHASES.has(String(handoff.phase))) {
+    errors.push('PHASE_INVALID');
+  }
+
+  if (!('sovereign_key' in handoff)) {
+    errors.push('SOVEREIGN_KEY_MISSING');
+  } else if (typeof handoff.sovereign_key !== 'string') {
+    errors.push('SOVEREIGN_KEY_INVALID');
+  } else {
+    const sovereignKey = handoff.sovereign_key;
+    const isFree = sovereignKey === 'veda_local_free';
+    const isPro = PRO_SOVEREIGN_KEY.test(sovereignKey);
+    if (!isFree && !isPro) errors.push('SOVEREIGN_KEY_INVALID');
+  }
+
   for (const key of REQUIRED_HANDOFF_KEYS) {
-    if (key === 'DATA_STATUS' || key === 'nonce' || key === 'sovereign_key') continue; // Handled above
+    if (
+      key === 'DATA_STATUS' ||
+      key === 'nonce' ||
+      key === 'phase' ||
+      key === 'sovereign_key'
+    ) {
+      continue;
+    }
+
     if (!(key in handoff)) errors.push(`MISSING_${key}`);
   }
 
-  // H3: Top-level forbidden fields
   for (const key of Object.keys(handoff)) {
     if (!ALLOWED_HANDOFF_KEYS.has(key)) errors.push(`FORBIDDEN_FIELD_${key}`);
   }
@@ -232,11 +296,12 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
     errors.push('TIMESTAMP_INVALID');
   } else {
     const timestampMs = Date.parse(handoff.timestamp);
+
     if (!Number.isFinite(timestampMs)) {
       errors.push('TIMESTAMP_INVALID');
     } else {
       const diff = timestampMs - nowMs;
-      // L2: Boundary check (inclusive 300s)
+
       if (diff >= 300_000) {
         errors.push('TIMESTAMP_INVALID');
       } else if (diff <= -300_000) {
@@ -245,26 +310,15 @@ export function validateHandoffShape(candidate: unknown, nowMs = Date.now()): Va
     }
   }
 
-  if (!VALID_PHASES.has(String(handoff.phase))) {
-    errors.push('PHASE_INVALID');
+  validateRequiredString(handoff.source_agent, 'SOURCE_AGENT_INVALID', errors);
+  validateRequiredString(handoff.target_agent, 'TARGET_AGENT_INVALID', errors);
+  validateRequiredString(handoff.task_id, 'TASK_ID_INVALID', errors);
+
+  if ('workflow_id' in handoff) {
+    validateRequiredString(handoff.workflow_id, 'WORKFLOW_ID_INVALID', errors);
   }
 
-  // H1: Sovereign key tier verification
-  if (!('sovereign_key' in handoff)) {
-    errors.push('SOVEREIGN_KEY_MISSING');
-  } else if (typeof handoff.sovereign_key !== 'string') {
-    errors.push('SOVEREIGN_KEY_INVALID');
-  } else {
-    const sk = handoff.sovereign_key;
-    const isFree = sk === 'veda_local_free';
-    const isPro = PRO_SOVEREIGN_KEY.test(sk);
-    if (!isFree && !isPro) errors.push('SOVEREIGN_KEY_INVALID');
-  }
-
-  // H2: Cryptographic shape validation
-  if (typeof handoff.signature !== 'string' || !/^[A-Za-z0-9+/]+=*$/.test(handoff.signature) || handoff.signature.length < 32) {
-    errors.push('SIGNATURE_INVALID');
-  }
+  validateSignatureShape(handoff.signature, errors);
 
   if (typeof handoff.hmac !== 'string' || !/^[a-f0-9]{64}$/.test(handoff.hmac)) {
     errors.push('HMAC_INVALID');
@@ -294,6 +348,9 @@ export function handoffSigningPayload(
   handoff: Omit<HandoffJSON_v611, 'signature' | 'hmac'> | HandoffJSON_v611
 ): string {
   const { signature: _signature, hmac: _hmac, ...unsigned } = handoff as Record<string, unknown>;
+  void _signature;
+  void _hmac;
+
   return canonicalStringify(unsigned);
 }
 
@@ -302,28 +359,31 @@ export function sealHandoff(
   material: HandoffSigningMaterial
 ): HandoffJSON_v611 {
   if (!material.hmacKey) throw new Error('VEDA_HMAC_KEY_REQUIRED');
+
   const payload = handoffSigningPayload(handoff);
   const hmac = createHmac('sha256', material.hmacKey).update(payload).digest('hex');
   const signature = ed25519Sign(null, Buffer.from(payload, 'utf8'), material.privateKey).toString('base64');
+
   return { ...handoff, signature, hmac };
 }
 
-// M3: verifyHandoffCrypto is now strictly about crypto
 export function verifyHandoffCrypto(
   handoff: unknown,
   material: HandoffVerificationMaterial
 ): ValidationResult {
-  if (!handoff || typeof handoff !== 'object') return { valid: false, errors: ['HANDOFF_NOT_OBJECT'] };
-  const signed = handoff as Record<string, any>;
-  
-  // Basic shape for crypto
+  if (!handoff || typeof handoff !== 'object' || Array.isArray(handoff)) {
+    return { valid: false, errors: ['HANDOFF_NOT_OBJECT'] };
+  }
+
+  const signed = handoff as Record<string, unknown>;
+
   if (typeof signed.hmac !== 'string' || typeof signed.signature !== 'string') {
     return { valid: false, errors: ['CRYPTO_FIELDS_MISSING'] };
   }
 
   if (!material.hmacKey) throw new Error('VEDA_HMAC_KEY_REQUIRED');
 
-  const payload = handoffSigningPayload(signed as HandoffJSON_v611);
+  const payload = handoffSigningPayload(signed as unknown as HandoffJSON_v611);
   const expectedHmac = createHmac('sha256', material.hmacKey).update(payload).digest('hex');
   const errors: string[] = [];
 
@@ -332,18 +392,48 @@ export function verifyHandoffCrypto(
   }
 
   try {
-    const signatureValid = ed25519Verify(
-      null,
-      Buffer.from(payload, 'utf8'),
-      material.publicKey,
-      Buffer.from(signed.signature, 'base64')
-    );
-    if (!signatureValid) errors.push('SIGNATURE_INVALID');
+    const signatureBytes = Buffer.from(signed.signature, 'base64');
+
+    if (signatureBytes.length !== 64) {
+      errors.push('SIGNATURE_INVALID');
+    } else {
+      const signatureValid = ed25519Verify(
+        null,
+        Buffer.from(payload, 'utf8'),
+        material.publicKey,
+        signatureBytes
+      );
+
+      if (!signatureValid) errors.push('SIGNATURE_INVALID');
+    }
   } catch {
     errors.push('SIGNATURE_INVALID');
   }
 
   return { valid: errors.length === 0, errors };
+}
+
+function validateRequiredString(value: unknown, errorCode: string, errors: string[]): void {
+  if (typeof value !== 'string' || value.trim() === '') {
+    errors.push(errorCode);
+  }
+}
+
+function validateSignatureShape(value: unknown, errors: string[]): void {
+  if (typeof value !== 'string') {
+    errors.push('SIGNATURE_INVALID');
+    return;
+  }
+
+  try {
+    const signatureBytes = Buffer.from(value, 'base64');
+
+    if (signatureBytes.length !== 64) {
+      errors.push('SIGNATURE_INVALID');
+    }
+  } catch {
+    errors.push('SIGNATURE_INVALID');
+  }
 }
 
 function validatePayload(value: unknown, errors: string[]): void {
@@ -353,18 +443,24 @@ function validatePayload(value: unknown, errors: string[]): void {
   }
 
   const payload = value as Record<string, unknown>;
-  
-  // H3: Nested forbidden fields
+
   for (const key of Object.keys(payload)) {
     if (!ALLOWED_PAYLOAD_KEYS.has(key)) errors.push(`FORBIDDEN_PAYLOAD_FIELD_${key}`);
   }
 
   if (typeof payload.instruction !== 'string') errors.push('PAYLOAD_INSTRUCTION_INVALID');
   if (typeof payload.context !== 'string') errors.push('PAYLOAD_CONTEXT_INVALID');
+
   if (!payload.data || typeof payload.data !== 'object' || Array.isArray(payload.data)) {
     errors.push('PAYLOAD_DATA_INVALID');
   }
-  if (!Array.isArray(payload.constraints)) errors.push('PAYLOAD_CONSTRAINTS_INVALID');
+
+  if (
+    !Array.isArray(payload.constraints) ||
+    !payload.constraints.every(item => typeof item === 'string')
+  ) {
+    errors.push('PAYLOAD_CONSTRAINTS_INVALID');
+  }
 }
 
 function validateGovernance(value: unknown, errors: string[]): void {
@@ -373,58 +469,64 @@ function validateGovernance(value: unknown, errors: string[]): void {
     return;
   }
 
-  const governance = value as Record<string, any>;
+  const governance = value as Record<string, unknown>;
 
-  // H3: Nested forbidden fields
   for (const key of Object.keys(governance)) {
     if (!ALLOWED_GOVERNANCE_KEYS.has(key)) errors.push(`FORBIDDEN_GOVERNANCE_FIELD_${key}`);
   }
 
-  // CR2: Must be explicitly true
   if (governance.zte_cleared !== true) errors.push('ZTE_CLEARANCE_DENIED');
   if (governance.spe_chain_passed !== true) errors.push('SPE_CLEARANCE_DENIED');
   if (governance.legal_cleared !== true) errors.push('LEGAL_CLEARANCE_DENIED');
   if (governance.budget_cleared !== true) errors.push('BUDGET_CLEARANCE_DENIED');
-  
-  // L3: Optional field validation
+
   if ('brand_cleared' in governance && governance.brand_cleared !== true) {
     errors.push('BRAND_CLEARANCE_DENIED');
   }
-  if ('human_approval_required' in governance && typeof governance.human_approval_required !== 'boolean') {
+
+  if (
+    'human_approval_required' in governance &&
+    typeof governance.human_approval_required !== 'boolean'
+  ) {
     errors.push('HUMAN_APPROVAL_SIGNAL_INVALID');
   }
 }
 
 function canonicalize(value: unknown): unknown {
-  // M2: Normalize null/undefined to undefined for object fields (which are then omitted)
   if (value === null || value === undefined) return undefined;
   if (typeof value !== 'object') return value;
-  
-  // NEW: Arrays preserve structure but canonicalize their contents
+
   if (Array.isArray(value)) {
-    return value.map(v => {
-      const canonical = canonicalize(v);
+    return value.map(item => {
+      const canonical = canonicalize(item);
       return canonical === undefined ? null : canonical;
     });
   }
 
   const sorted: Record<string, unknown> = {};
-  const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
-  
+  const entries = Object.entries(value as Record<string, unknown>).sort(([left], [right]) =>
+    left.localeCompare(right)
+  );
+
   for (const [key, entry] of entries) {
     const processed = canonicalize(entry);
     if (processed !== undefined) sorted[key] = processed;
   }
+
   return sorted;
 }
 
 function safeEqualHex(left: string, right: string): boolean {
-  // H4: Fix timing oracle by checking length first and enforcing SHA256 output length (32 bytes)
   if (left.length !== 64 || right.length !== 64) return false;
-  
+
   try {
     const leftBuffer = Buffer.from(left, 'hex');
     const rightBuffer = Buffer.from(right, 'hex');
+
+    if (leftBuffer.length !== 32 || rightBuffer.length !== 32) {
+      return false;
+    }
+
     return timingSafeEqual(leftBuffer, rightBuffer);
   } catch {
     return false;

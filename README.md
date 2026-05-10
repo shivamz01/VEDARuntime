@@ -72,23 +72,38 @@ Anything that does not pass this end-to-end chain is `SPEC_ONLY`, `PARTIAL`, or 
 - **Rate-Limited API Surface** — status and execution demo endpoints are protected from request flooding.
 - **No Wildcard CORS** — `VEDA_API_CORS_ORIGIN=*` is rejected.
 - **No Simulation as Production** — `DATA_STATUS: SIMULATED` cannot claim production readiness.
-- **Configurable Execution Profiles** — choose between `local_safe`, `standard`, and `pro_cloud` based on hardware and workflow requirements.
+- **Configurable Execution Profiles** — `local_safe` enforces serialized execution and cooldown for low-resource machines; `standard` and `pro_cloud` define bounded concurrency targets for dependency-aware schedulers.
 - **Real Pro Persistence Proof** — Pro persistence is verified with real Supabase insert/readback via `npm run pro:verify`.
 
 ---
 
 ## Execution Profiles
 
-VEDA Runtime supports three distinct execution profiles to balance safety, performance, and hardware constraints.
+VEDA Runtime separates execution behavior from product identity. Low-resource local machines can run safely with serialized execution, while higher-resource deployments can use bounded concurrency once the scheduler and runtime path enforce the selected profile.
 
-| Profile | Concurrency | Cooldown | Purpose |
-|---|---|---|---|
-| **Local Safe** | 1 (Sequential) | 8 sec | Low CPU/GPU machines; maximum safety (Default) |
-| **Standard** | 2–8 Parallel | 0 sec | Normal developer machines; balanced throughput |
-| **Pro Cloud** | 32+ Bounded | 0 sec | Cloud-native scaling; dependency-aware high-concurrency |
+| Profile | Default Concurrency | Cooldown | Purpose |
+|---|---:|---:|---|
+| **Local Safe** | 1 agent | 8 sec | Low CPU/GPU machines; serialized execution and mandatory cooldown |
+| **Standard** | 4 agents | 0 sec | Normal developer machines; bounded dependency-aware execution target |
+| **Pro Cloud** | 16 agents / 32 tools | 0 sec | Cloud deployment target; configurable bounded execution with deterministic audit ordering |
 
 > [!IMPORTANT]
-> The **Local Safe** profile enforces a mandatory 8-second CPU/GPU cool-down between agent executions to prevent resource exhaustion and recursive hallucination loops on limited hardware.
+> The **Local Safe** profile enforces serialized execution and an 8-second cooldown between runtime executions to reduce resource exhaustion and runaway execution pressure on limited hardware.
+
+> [!NOTE]
+> `local_safe` is enforced by the Free runtime execution gate. `standard` and `pro_cloud` are execution profiles for bounded scheduler integration and must be treated as production-ready only when the workflow scheduler and paid runtime enforce their concurrency limits, rollback locks, and audit ordering.
+
+### Execution Profile Semantics
+
+| Field | Meaning |
+|---|---|
+| `max_parallel_agents` | Maximum agent executions allowed at one time |
+| `max_parallel_tools` | Maximum tool calls allowed at one time |
+| `max_provider_calls` | Maximum model/provider calls allowed at one time |
+| `cooldown_seconds` | Delay between executions for low-resource or strict profiles |
+| `queue_mode` | `sequential` or `dependency_aware` scheduling behavior |
+| `rollback_locking` | `workflow` or `resource` rollback lock granularity |
+| `audit_ordering` | Deterministic trace ordering requirement |
 
 ---
 
@@ -121,7 +136,7 @@ Layer 1     Runtime API               — Schema validation · nonce · signatur
 Layer 1.5   @veda-runtime-v1/shared   — Canonical TS contracts: HandoffJSON, FSMState, VedaTraceSpan
 Layer 2     Governance Injection      — Zero Trust · Security Policy · Legal · Budget · Manual approval
 Layer 3     Risk & Threat Engine      — Dynamic Weighted Risk Vector · graph propagation · obfuscation detection
-Layer 4     Workflow Engine / FSM     — DAG creation · sequential dispatch · retry governance
+Layer 4     Workflow Engine / FSM     — DAG creation · dependency-aware scheduling · bounded execution profiles · retry governance
 Layer 4.5   Capability Router         — Provider health check · fallback · cost guardrail
 
             ── Layers 5 and 6 are intentionally reserved for application-level
@@ -153,6 +168,7 @@ Runs entirely locally. No cloud dependencies required.
 | Rollback Engine | Verified file snapshots before destructive action |
 | HMAC-Chained Audit Ledger | Local JSONL ledger; every span cryptographically chained |
 | Cryptographic Handoffs | ed25519 signing + HMAC-SHA256 payload integrity verification |
+| Local Safe Execution Gate | Serialized local execution with optional cooldown enforcement |
 
 ### Pro Extensions — Paid
 
@@ -172,6 +188,7 @@ npm run pro:verify
 | License Gate | HMAC-signed Pro license issue/verify flow |
 | VEDA Bridge Adapter | Optional adapter for broader VEDA OS ecosystem integration |
 | API/Web Status Surface | Runtime status and telemetry endpoints |
+| Pro Execution Profiles | Bounded concurrency targets for paid/cloud scheduler integration |
 
 ---
 
@@ -236,10 +253,11 @@ This executes a complete local proof workflow:
 3. Validates schema, signature, and HMAC.
 4. Inserts nonce into the local replay-prevention registry.
 5. Scopes context through the Context Governor.
-6. Creates a verified rollback checkpoint.
-7. Executes the sandbox-approved tool call.
-8. Writes HMAC-chained audit spans to the local ledger.
-9. Outputs cryptographic proof and execution result.
+6. Enforces the selected local execution profile.
+7. Creates a verified rollback checkpoint.
+8. Executes the sandbox-approved tool call.
+9. Writes HMAC-chained audit spans to the local ledger.
+10. Outputs cryptographic proof and execution result.
 
 Expected shape:
 
@@ -398,6 +416,13 @@ Every inter-agent or runtime execution request must use this protocol.
 
 The schema string is a **locked protocol identifier**. It must not be altered.
 
+Product/runtime version and handoff protocol version are separate:
+
+```text
+Product version: 1.1.0
+HANDOFF_JSON protocol version: v6.1.1
+```
+
 ```json
 {
   "schema_version": "v6.1.1",
@@ -445,7 +470,7 @@ examples/free-demo.mjs
 
 | Field | Values / Format | Meaning |
 |---|---|---|
-| `schema_version` | `"v6.1.1"` | Locked protocol version |
+| `schema_version` | `"v6.1.1"` | Locked handoff protocol version |
 | `nonce` | UUID v4 or 32+ hex chars | One-time replay-prevention value |
 | `DATA_STATUS` | `REAL` · `SIMULATED` · `PARTIAL` | Data/execution status |
 | `phase` | `"1"` or `"2"` | `1` = planning/validation; `2` = execution |
@@ -722,7 +747,7 @@ VEDA Runtime does not position itself as:
 - an AGI orchestration layer
 - a self-improving agent swarm
 - a replacement for OS-level sandboxing
-- a multi-tenant SaaS isolation system in v1.x
+- a fully isolated multi-tenant SaaS runtime in v1.x
 
 It is runtime infrastructure for deterministic, observable, recoverable AI execution.
 

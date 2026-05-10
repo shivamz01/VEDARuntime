@@ -4,6 +4,12 @@ import {
   type SpanStatus,
   type VedaTraceSpan
 } from '@veda-runtime-v1/shared';
+import {
+  EXECUTION_PROFILES,
+  getExecutionProfile,
+  type ExecutionProfile,
+  type ExecutionProfileId
+} from '@veda-runtime-v1/shared';
 import { Buffer } from 'node:buffer';
 import { createHash, createHmac, generateKeyPairSync, randomUUID, timingSafeEqual } from 'node:crypto';
 
@@ -548,6 +554,7 @@ export interface CreatePaidRuntimeOptions {
   hmacKey: string;
   supabaseClient: SupabaseClient;
   profileId?: GovernanceProfileId;
+  executionProfileId?: ExecutionProfileId;
 }
 
 export class PaidRuntimeKernel {
@@ -557,8 +564,14 @@ export class PaidRuntimeKernel {
   private readonly auditLedger: SupabaseAuditLedger;
   private readonly pipelineLog: SupabasePipelineLog;
   private readonly shellPolicy = new ShellPolicy();
+
   private readonly profile: GovernanceProfile;
+  private readonly executionProfile: ExecutionProfile;
   private readonly handoffKeyPair = generateKeyPairSync('ed25519');
+
+  private activeExecutions = 0;
+  private lastExecutionEndMs = 0;
+  private readonly executionWaiters: Array<() => void> = [];
 
   constructor(private readonly options: CreatePaidRuntimeOptions) {
     if (!options.hmacKey) throw new Error('VEDA_HMAC_KEY_REQUIRED');
@@ -567,9 +580,22 @@ export class PaidRuntimeKernel {
     this.auditLedger = new SupabaseAuditLedger(options.supabaseClient, options.hmacKey);
     this.pipelineLog = new SupabasePipelineLog(options.supabaseClient);
     this.profile = getGovernanceProfile(options.profileId ?? 'standard');
+    this.executionProfile = getExecutionProfile(options.executionProfileId ?? 'pro_cloud');
   }
 
   async executeDemo(input: DemoExecutionInput): Promise<DemoExecutionResult> {
+    return this.runWithExecutionGate(async () => {
+      await this.throttle();
+
+      try {
+        return await this.executeDemoUnsafe(input);
+      } finally {
+        this.lastExecutionEndMs = Date.now();
+      }
+    });
+  }
+
+  private async executeDemoUnsafe(input: DemoExecutionInput): Promise<DemoExecutionResult> {
     const handoff = this.createPaidHandoff(input);
     const shape = validateHandoffShape(handoff);
     if (!shape.valid) throw new Error(`HANDOFF_INVALID: ${shape.errors.join(',')}`);
@@ -610,7 +636,12 @@ export class PaidRuntimeKernel {
       agent_name: 'paid-runtime-kernel',
       event_type: 'HANDOFF_ACCEPTED',
       status: 'SUCCESS',
-      metadata: { schema_version: HANDOFF_SCHEMA_VERSION, profile: this.profile.id }
+      metadata: { 
+        schema_version: HANDOFF_SCHEMA_VERSION, 
+        profile: this.profile.id,
+        execution_profile: this.executionProfile.id,
+        max_parallel_agents: this.executionProfile.max_parallel_agents
+      }
     }));
 
     spans.push(await this.auditLedger.appendSpan({
@@ -651,7 +682,10 @@ export class PaidRuntimeKernel {
       `schema=${HANDOFF_SCHEMA_VERSION}`,
       `product=${PRODUCT_VERSION}`,
       `context_items=${context.relevant_memory.length}`,
-      `profile=${this.profile.id}`
+      `profile=${this.profile.id}`,
+      `execution_profile=${this.executionProfile.id}`,
+      `max_parallel_agents=${this.executionProfile.max_parallel_agents}`,
+      `cooldown_seconds=${this.executionProfile.cooldown_seconds}`
     ].join('\n'), 'utf8');
 
     spans.push(await this.auditLedger.appendSpan({
@@ -669,7 +703,10 @@ export class PaidRuntimeKernel {
       agent_name: 'paid-runtime-kernel',
       event_type: 'AGENT_COMPLETE',
       status: 'SUCCESS',
-      metadata: { data_status: 'REAL' }
+      metadata: { 
+        data_status: 'REAL',
+        execution_profile: this.executionProfile.id
+      }
     }));
 
     await this.pipelineLog.write({
@@ -699,6 +736,50 @@ export class PaidRuntimeKernel {
     };
   }
 
+  private async runWithExecutionGate<T>(operation: () => Promise<T>): Promise<T> {
+    await this.acquireExecutionSlot();
+
+    try {
+      return await operation();
+    } finally {
+      this.releaseExecutionSlot();
+    }
+  }
+
+  private async acquireExecutionSlot(): Promise<void> {
+    const maxParallelAgents = Math.max(1, Math.floor(this.executionProfile.max_parallel_agents));
+
+    while (this.activeExecutions >= maxParallelAgents) {
+      await new Promise<void>(resolve => {
+        this.executionWaiters.push(resolve);
+      });
+    }
+
+    this.activeExecutions += 1;
+  }
+
+  private releaseExecutionSlot(): void {
+    this.activeExecutions = Math.max(0, this.activeExecutions - 1);
+    const next = this.executionWaiters.shift();
+
+    if (next) {
+      next();
+    }
+  }
+
+  private async throttle(): Promise<void> {
+    const cooldownMs = Math.max(0, this.executionProfile.cooldown_seconds) * 1000;
+    if (cooldownMs <= 0) return;
+
+    const now = Date.now();
+    const elapsed = now - this.lastExecutionEndMs;
+    const remaining = cooldownMs - elapsed;
+
+    if (this.lastExecutionEndMs > 0 && remaining > 0) {
+      await sleep(remaining);
+    }
+  }
+
   private createPaidHandoff(input: DemoExecutionInput): HandoffJSON_v611 {
     const timestamp = new Date().toISOString();
     const nonce = randomUUID();
@@ -724,9 +805,9 @@ export class PaidRuntimeKernel {
         budget_cleared: true,
         human_approval_required: this.profile.require_human_approval
       },
+      sovereign_key: sovereignKey,
       DATA_STATUS: 'REAL',
-      phase: '2',
-      sovereign_key: sovereignKey
+      phase: '2'
     } satisfies Omit<HandoffJSON_v611, 'signature' | 'hmac'>;
 
     return sealHandoff(base, {
@@ -762,4 +843,8 @@ export function createLicensedPaidRuntime(options: CreateLicensedPaidRuntimeOpti
   }
 
   return new PaidRuntimeKernel(runtimeOptions);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
