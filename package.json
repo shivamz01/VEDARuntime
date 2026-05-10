@@ -1,6 +1,6 @@
 {
   "name": "veda-runtime-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Enterprise-grade AI execution kernel. Deterministic orchestration, cryptographic audit ledgers, rollback checkpoints, and strict governance for safe LLM agent workflows.",
@@ -38,7 +38,7 @@
     "status": "node scripts/status.mjs",
     "demo:paid:supabase": "npm run build && node examples/paid-supabase-smoke.mjs",
     "pro:verify": "npm run demo:paid:supabase && npm run pro:replay",
-    "pro:replay": "npm run build && node examples/supabase-replay-test.mjs"
+    "pro:replay": "npm run build && node examples/paid-supabase-replay-test.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",

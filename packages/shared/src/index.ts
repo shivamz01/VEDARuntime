@@ -6,7 +6,7 @@ import {
   type KeyLike
 } from 'node:crypto';
 
-export const PRODUCT_VERSION = '1.0.0' as const;
+export const PRODUCT_VERSION = '1.1.0' as const;
 export const PRODUCT_NAME = 'VEDA Runtime Version 1' as const;
 export const HANDOFF_SCHEMA_VERSION = 'v6.1.1' as const;
 

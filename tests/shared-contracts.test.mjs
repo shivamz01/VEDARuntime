@@ -38,7 +38,7 @@ function validUnsignedHandoff(overrides = {}) {
 }
 
 test('product version is Version 1 while handoff schema remains v6.1.1', () => {
-  assert.equal(PRODUCT_VERSION, '1.0.0');
+  assert.equal(PRODUCT_VERSION, '1.1.0');
   assert.equal(HANDOFF_SCHEMA_VERSION, 'v6.1.1');
 });
 

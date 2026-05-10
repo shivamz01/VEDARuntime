@@ -37,11 +37,7 @@ This checklist must be completed before VEDA Runtime `v1.1.0-pro-persistence` is
 - [x] Workflow is manual-only (`workflow_dispatch`)
 - [x] Workflow permissions restricted to `contents: read`
 - [x] Workflow has timeout protection
-- [x] Required secrets configured:
--       [x] SUPABASE_URL
--       [x] SUPABASE_SERVICE_KEY
--       [x] VEDA_HMAC_KEY
--       [x] VEDA_LICENSE_SECRET
+- [x] Required secrets configured (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `VEDA_HMAC_KEY`, `VEDA_LICENSE_SECRET`)
 - [x] Manual workflow passes in GitHub Actions
 - [x] No secrets printed in logs
 
@@ -53,21 +49,19 @@ This checklist must be completed before VEDA Runtime `v1.1.0-pro-persistence` is
 - [x] Rate limiting implemented for `/api/demo/free`
 - [x] Missing `Origin` header rejected in production
 - [x] `/health` remains available for uptime checks
-- [x]  Startup failure if `VEDA_HMAC_KEY` is missing in production
+- [x] Startup failure if `VEDA_HMAC_KEY` is missing in production
 - [x] Wildcard CORS rejected in production
-- [ ] Dedicated `/execute` endpoint rate limiting, when `/execute` is added
 
 ---
 
 ## 4. Documentation & Governance
 
 - [x] Supabase Pro setup guide updated
-- [x] `KNOWN_ISSUES.md` updated (KI-001 marked Resolved)
+- [x] `KNOWN_ISSUES.md` updated with KI-001 resolved
 - [x] Pro smoke test documented in setup guides
 - [x] `README.md` updated with Pro hardening details
 - [x] `README.md` updated with Pro persistence verification details
 - [x] `README.md` clearly separates Free v1.0 from Pro v1.1 capabilities
-- [x] KNOWN_ISSUES.md updated with KI-001 resolved
 - [x] Support bundle collector includes latest Pro verification artifact or clearly states Pro state is not verified
 
 ---

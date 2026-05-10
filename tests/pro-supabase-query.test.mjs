@@ -24,7 +24,7 @@ function createRealLikeSupabase() {
         workflow_id: "workflow-existing",
         step_id: "first",
         agent_name: "test",
-        agent_version: "1.0.0",
+        agent_version: "1.1.0",
         event_type: "EXISTING",
         timestamp: "2026-01-01T00:00:00.000Z",
         status: "SUCCESS",

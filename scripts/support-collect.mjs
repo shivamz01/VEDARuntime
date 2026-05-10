@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(SCRIPT_DIR, '..');
-
 const DEFAULT_ENV_KEYS = [
   'VEDA_HMAC_KEY',
   'SUPABASE_URL',
@@ -65,9 +64,9 @@ export async function readLatestPipelineArtifacts(logsDir, limit = 5) {
             id: step.id ?? null,
             name: step.name ?? null,
             status: step.status ?? null,
-            exitCode: Number.isInteger(step.exitCode) ? step.exitCode : null
+            exitCode: Number.isInteger(step.exitCode) ? step.exitCode : null,
           }))
-        : []
+        : [],
     });
   }
 
@@ -220,24 +219,18 @@ async function runOptional(commandRunner, command, args, cwd) {
 
 function defaultCommandRunner(command, args, cwd) {
   return new Promise((resolveRunner, rejectRunner) => {
-    execFile(
-      command,
-      args,
-      {
-        cwd,
-        shell: false,
-        windowsHide: true,
-        timeout: 10_000
-      },
-      (error, stdout, stderr) => {
-        if (error) {
-          rejectRunner(new Error(stderr || error.message));
-          return;
-        }
-
-        resolveRunner(stdout);
+    execFile(command, args, {
+      cwd,
+      shell: false,
+      windowsHide: true,
+      timeout: 10000,
+    }, (error, stdout, stderr) => {
+      if (error) {
+        rejectRunner(new Error(stderr || error.message));
+        return;
       }
-    );
+      resolveRunner(stdout);
+    });
   });
 }
 
