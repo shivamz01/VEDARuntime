@@ -1,77 +1,206 @@
 # Code of Conduct
 
-## Our Commitment
+VEDA Runtime is committed to maintaining a professional, respectful, and security-conscious community.
 
-VEDA Runtime is dedicated to building a **safe, inclusive, and respectful community** for everyone.
-
-We are committed to providing a welcoming environment regardless of:
-- Age, disability, ethnicity, gender identity, nationality, personal appearance
-- Race, religion, sexual identity, sexual orientation, socioeconomic status
-- Or any other characteristic
+We welcome contributors of all backgrounds and experience levels. This community is built on technical excellence, responsible security practices, and mutual respect.
 
 This Code of Conduct applies to:
 - GitHub issues and discussions
 - Pull requests and code reviews
-- Community chat (Discord, Slack, etc.)
-- Project events and meetings
-- Our online and offline spaces
+- Community channels
+- Project-related events
+- Official communication spaces
 
 ---
 
-## Our Standards
+## Community Principles
 
-### ✅ Examples of Behavior We Encourage
+We expect contributors to:
 
-- **Be respectful** — Treat everyone with dignity and kindness
-- **Be welcoming** — Help newcomers feel valued and supported
-- **Be inclusive** — Actively include people from different backgrounds
-- **Be constructive** — Provide helpful feedback focused on ideas, not people
-- **Be honest** — Admit mistakes, apologize when needed
-- **Be curious** — Ask questions and try to understand other perspectives
-- **Be supportive** — Celebrate others' wins and help them succeed
-- **Be open-minded** — Be willing to change your mind with good arguments
-- **Focus on security** — Help identify and fix vulnerabilities responsibly
-- **Assume good intent** — Most conflicts are misunderstandings, not attacks
+- Communicate professionally and respectfully
+- Focus criticism on technical work, not individuals
+- Help maintain a safe and constructive environment
+- Respect different experience levels and backgrounds
+- Participate in good faith
+- Report security concerns responsibly
+- Welcome and support newcomers
 
-### ❌ Examples of Unacceptable Behavior
+---
 
-**Harassment & Abuse:**
-- Personal attacks, insults, name-calling
-- Threats of violence or harm
-- Intimidation or bullying
-- Doxxing (sharing private information)
-- Sustained disruption of discussions
+## Expected Behavior
 
-**Discrimination:**
-- Comments based on protected characteristics
-- Slurs or dehumanizing language
-- Exclusion of people based on identity
-- Microaggressions or subtle discrimination
+### ✅ Examples of Expected Behavior
 
-**Sexual Harassment:**
-- Unwanted sexual comments or advances
-- Sexual images or content
-- Sexual jokes or references (in professional context)
+- Respectful technical disagreement backed by reasoning
+- Constructive feedback focused on ideas and implementation
+- Honest communication and admitting mistakes
+- Responsible disclosure of vulnerabilities
+- Helping and mentoring new contributors
+- Maintaining professional discussion standards
+- Celebrating community wins
+- Assuming good intent in most interactions
+
+### ✅ Code Examples
+
+**Good:**
+```
+"This implementation may introduce a race condition in the rollback engine.
+Have you considered using atomic operations for the checkpoint?"
+```
+
+**Bad:**
+```
+"Your code is terrible."
+```
+
+**Good:**
+```
+"I disagree with this design because it adds complexity to rollback recovery.
+What if we handled it differently?"
+```
+
+**Bad:**
+```
+"Anyone competent would know this is wrong."
+```
+
+---
+
+## Unacceptable Behavior
+
+The following behavior is not acceptable:
+
+### Harassment and Abuse
+- Personal attacks, insults, or name-calling
+- Threats, intimidation, or bullying
+- Hate speech or slurs
+- Doxxing or sharing private information
+- Sustained hostile behavior
+
+### Discrimination
+- Discriminatory language based on protected characteristics
+- Exclusion based on identity or background
+- Dehumanizing language
+- Repeated exclusionary behavior
+
+### Sexual Harassment
+- Unwanted sexual comments, advances, or imagery
+- Sexual jokes or references in professional contexts
 - Quid pro quo harassment ("help me or else")
-- Non-consensual contact
+- Non-consensual contact or unwanted touching
 
-**Spam & Self-Promotion:**
-- Repeated unsolicited promotion of services
-- Flooding channels with off-topic content
+### Security Violations
+- Public disclosure of unpatched vulnerabilities
+- Sharing malicious code intentionally
+- Credential exposure or sharing
+- Attempted sabotage of contributors or infrastructure
+- Exploiting security issues without responsible disclosure
+
+### Spam and Manipulation
+- Repeated unsolicited promotion
 - Malicious links or downloads
-- Cryptocurrency schemes or MLMs
+- Deliberate misinformation campaigns
+- Coordinated bad-faith behavior
+- Fake accounts or coordination attempts
 
-**Endangering Security:**
-- Posting others' private information without consent
-- Publicly disclosing unpatched vulnerabilities
-- Intentionally sabotaging the project
-- Spreading malware or malicious code
+---
 
-**Bad Faith Participation:**
-- Deliberately spreading misinformation
-- Bad-faith arguments designed to waste time
-- Trolling or provocative behavior without substance
-- Sock puppeting (fake accounts to appear as consensus)
+## Professional Disagreement
+
+Technical disagreement is expected and valued.
+
+**Best practices:**
+- Explain the technical concern with reasoning
+- Provide evidence or alternative approaches
+- Suggest concrete improvements
+- Keep discussion focused on implementation
+- Separate technical critique from personal critique
+
+**Avoid:**
+- Escalating tone or hostility
+- Mocking or sarcasm at others' expense
+- Personal attacks disguised as technical criticism
+- Repeated arguments after decision is made
+
+---
+
+## Reporting Violations
+
+**Do NOT publicly escalate serious violations.**
+
+Report privately to:
+
+**Email:** shivam.shrivastave05@gmail.com
+
+**Subject:** `[CODE OF CONDUCT VIOLATION] Brief description`
+
+**Include:**
+- What happened (who, what, when)
+- Why it violates this Code of Conduct
+- Relevant links, screenshots, or context
+- Impact on you or others
+- Any additional context
+
+### Investigation Process
+
+| Step | Timeline |
+|------|----------|
+| 1. Report received | Immediate |
+| 2. Acknowledgement and initial questions | 24-48 hours |
+| 3. Investigation | 3-7 days |
+| 4. Decision and action | Depends on severity |
+| 5. Follow-up communication | After resolution |
+
+### Confidentiality
+
+- ✅ Reports are handled confidentially
+- ✅ Reporter identity is protected
+- ✅ Investigation conducted discreetly
+- ✅ Actions taken without unnecessary public disclosure
+
+Note: Absolute confidentiality cannot be guaranteed in all situations.
+
+---
+
+## Enforcement Actions
+
+Potential actions depend on severity and context:
+
+| Severity | Possible Action |
+|----------|-----------------|
+| **Minor** | Private warning or request for correction |
+| **Moderate** | Temporary restriction from issues/discussions |
+| **Serious** | Temporary ban from repository |
+| **Severe** | Permanent ban and platform escalation |
+
+Enforcement decisions consider:
+- Severity of violation
+- Intent and context
+- Repeated behavior patterns
+- Community safety impact
+- Security implications
+
+---
+
+## Appeals Process
+
+If you believe an enforcement action was unfair:
+
+1. **Contact maintainers privately** with:
+   - Explanation of why you disagree
+   - New information or context
+   - Request review within 30 days
+
+2. **Review will include:**
+   - Reconsideration of the original decision
+   - Evaluation of new information
+   - Explanation of final decision
+   - Opportunity to discuss resolution
+
+3. **Appeals may be denied if:**
+   - No substantial new information provided
+   - Behavior was severe or repeated
+   - Original decision was clearly justified
 
 ---
 
@@ -79,289 +208,122 @@ This Code of Conduct applies to:
 
 ### If You Witness Unacceptable Behavior
 
-**What to do:**
-1. If safe, politely point it out: "Hey, that's not respectful"
+1. If safe, politely point it out: "That comment isn't respectful"
 2. If not safe or ineffective, report it to maintainers
 3. Don't escalate or attack back
 4. Assume good intent unless proven otherwise
 
-**What NOT to do:**
-- ❌ Publicly shame the person
-- ❌ Start a pile-on
-- ❌ Assume malicious intent
-- ❌ Engage in argument spirals
-
 ### If You're Called Out
 
-**We're all learning.** If someone says your behavior is inappropriate:
+If someone says your behavior is inappropriate:
 
-1. **Listen** — Don't get defensive immediately
-2. **Apologize** — If they're right, say "I'm sorry, that was wrong"
-3. **Explain** — If there's a misunderstanding, calmly explain
-4. **Move on** — Don't dwell on it or make it worse
-5. **Change** — Show through actions that you've learned
+1. **Listen** without getting defensive
+2. **Apologize** if they're right
+3. **Explain** if there's a misunderstanding
+4. **Change** — show growth through actions
 
-**Example:**
+**Example response:**
 ```
-❌ "That's not what I meant! You're being too sensitive!"
-✅ "I see how that came across badly. I apologize. I meant X, but I should have said it better."
-```
-
----
-
-## Reporting Violations
-
-### How to Report
-
-**Email:** shivam.shrivastave05@gmail.com
-
-**Subject:** `[CODE OF CONDUCT VIOLATION] Brief description`
-
-**Include:**
-
-```
-What happened:
-- Who was involved?
-- What did they do?
-- When did it happen?
-
-Impact:
-- How did this affect you or others?
-- Why does it violate the Code of Conduct?
-
-Evidence:
-- Links to comments/issues
-- Screenshots (if applicable)
-- Context (what happened before)
-
-What you want:
-- Resolution you'd like
-- or just asking us to handle it
-```
-
-### What We Do
-
-| Step | Timeline |
-|------|----------|
-| 1. We receive your report | Immediate |
-| 2. We acknowledge & ask questions | 24-48 hours |
-| 3. We investigate | 3-7 days |
-| 4. We take action | Depends on severity |
-| 5. We follow up with you | After resolution |
-
-### Confidentiality
-
-- ✅ Your report is confidential
-- ✅ We won't publicly identify reporters (unless you agree)
-- ✅ We keep reporter identity safe
-- ✅ We investigate without unnecessary publicity
-
-### Possible Actions
-
-**For minor violations:**
-- Friendly reminder in private message
-- Public apology requested
-- Warning about future behavior
-
-**For serious violations:**
-- Comment deletion or edit requirement
-- Temporary muting (24-72 hours)
-- Ban from discussion/issues
-- Ban from repository
-
-**For severe violations:**
-- Permanent ban
-- Report to platform (GitHub, etc.)
-- Legal action if applicable
-
----
-
-## Accountability
-
-### Transparency
-
-- We apply this Code of Conduct consistently
-- We're accountable to the community
-- Decisions can be appealed (with valid reasons)
-- We publish summary reports quarterly (with privacy maintained)
-
-### We Won't Tolerate
-
-- ❌ Punishment for good-faith reporting
-- ❌ Retaliation against people who report violations
-- ❌ Protecting violators to save face
-- ❌ Different standards for maintainers vs. contributors
-
-### Appeals
-
-If you believe a decision was unfair:
-
-1. Email maintainers with:
-   - Why you disagree
-   - New information (if any)
-   - Requested review date (within 30 days)
-
-2. We'll:
-   - Review the decision
-   - Consider new information
-   - Confirm or adjust action
-   - Explain the decision
-
----
-
-## Our Values
-
-### Safety First 🛡️
-Everyone should feel safe participating. Safety includes:
-- Physical safety (no threats/violence)
-- Emotional safety (no harassment/discrimination)
-- Privacy safety (no doxxing/exposures)
-- Professional safety (no sabotage)
-
-### Respect & Dignity 🤝
-Every person deserves respect regardless of:
-- Technical skill level
-- Years of experience
-- Background or identity
-- How much code they've contributed
-
-### Growth Mindset 📈
-We believe:
-- Mistakes are learning opportunities
-- People can change and grow
-- Feedback should be constructive
-- Failure is part of building
-
-### Community Over Individuals 🌍
-We prioritize:
-- The health of the project
-- The safety of the community
-- Long-term trust over short-term wins
-- Collective values over individual disputes
-
----
-
-## Specific Scenarios
-
-### Disagreements About Code
-
-**How to handle:**
-```
-❌ "Your code is terrible and you clearly don't know what you're doing"
-✅ "This implementation has a performance issue. Have you considered [approach]?"
-
-❌ "Anyone with half a brain would see this is wrong"
-✅ "I see a potential security concern here. Let's discuss it."
-```
-
-### Newcomer Questions
-
-**How to respond:**
-```
-❌ "This is basic. You should learn before posting."
-✅ "Great question! Here's how to do it. Also check out [resource]."
-
-❌ "RTFM"
-✅ "The README covers this in the 'Setup' section. Let me know if that's unclear."
-```
-
-### Difficult Conversations
-
-**How to engage:**
-```
-❌ "You always do this and it's annoying"
-✅ "I noticed this pattern and it impacts X. Can we talk about it?"
-
-❌ "Everyone agrees you're wrong"
-✅ "I see this differently. Here's my perspective..."
+"I see how that came across badly. I apologize. I meant X, 
+but I should have said it better. I'll be more careful."
 ```
 
 ---
 
-## Resources
+## Security-Specific Conduct
 
-### For Everyone
-- [Contributing Guide](CONTRIBUTING.md) — How to participate
-- [Security Policy](SECURITY.md) — How to report vulnerabilities
-- [GitHub Community Guidelines](https://docs.github.com/en/site-policy/github-terms/github-community-guidelines) — Broader platform standards
+Because VEDA Runtime is security-oriented infrastructure, contributors must follow responsible security practices:
 
-### For Maintainers
-- How to respond to CoC violations
-- When to escalate to GitHub
-- Documentation of enforcement actions
-- Regular review and updates
+### Expected:
+- Coordinated vulnerability disclosure
+- Minimal proof-of-concept exposure
+- Redaction of credentials and sensitive data
+- Safe testing practices on controlled systems
 
-### For those experiencing issues
-- Crisis hotlines and support resources (if applicable)
-- Employee assistance programs (in company settings)
-- Mental health resources
+### Not Acceptable:
+- Publishing exploit chains irresponsibly
+- Credential dumping or exposure
+- Spreading malware or weaponized code
+- Live-target exploitation without authorization
+- Public disclosure before patches available
 
----
-
-## Enforcement
-
-### Our Commitment
-
-We will:
-- ✅ Enforce this Code of Conduct fairly
-- ✅ Respond promptly to reports
-- ✅ Keep confidentiality when possible
-- ✅ Explain our decisions
-- ✅ Allow appeals of decisions
-- ✅ Update the policy as needed
-
-We will not:
-- ❌ Turn a blind eye to violations
-- ❌ Protect powerful people or maintainers specially
-- ❌ Ignore patterns of bad behavior
-- ❌ Apply rules inconsistently
-- ❌ Punish people for reporting in good faith
+See [SECURITY.md](SECURITY.md) for vulnerability reporting details.
 
 ---
 
-## Changes to This Policy
+## Maintainer Responsibilities
 
-This Code of Conduct may be updated:
-- To address new issues
-- Based on community feedback
-- To improve clarity
-- To strengthen protections
+Maintainers are expected to:
+- Apply standards consistently and fairly
+- Avoid favoritism or preferential treatment
+- Respond professionally to all contributors
+- Separate technical disagreement from enforcement
+- Protect contributor safety where possible
+- Model the behavior we expect
 
-**We will:**
-- Post changes publicly
-- Give community time to comment
-- Explain why changes were made
-- Apply new rules fairly to everyone
+Maintainers are also bound by this Code of Conduct.
 
 ---
 
-## Credits
+## Scope
 
-This Code of Conduct is adapted from:
-- [Contributor Covenant](https://www.contributor-covenant.org/)
-- [Python Community Code of Conduct](https://www.python.org/community/diversity/)
-- [Rust Code of Conduct](https://www.rust-lang.org/policies/code-of-conduct)
+This Code of Conduct governs:
+- ✅ Project spaces and official channels
+- ✅ Public interactions directly related to the project
+- ✅ GitHub issues, discussions, and pull requests
 
-Thank you to these communities for setting great examples.
+It does not govern:
+- ❌ Unrelated private activity
+- ❌ Off-topic personal conduct outside project spaces
 
----
-
-## Questions?
-
-- **About this Code:** shivam.shrivastave05@gmail.com
-- **To report a violation:** shivam.shrivastave05@gmail.com
-- **General community questions:** GitHub Discussions
+However, conduct creating a direct project safety risk may still be addressed.
 
 ---
 
-## TL;DR
+## Policy Updates
 
-**Be respectful, be kind, be inclusive. Call out bad behavior respectfully. Report serious issues privately. Assume good intent. Help each other grow.**
+This policy may evolve to:
+- Improve clarity and specificity
+- Address new types of abuse or misconduct
+- Reflect operational realities
+- Strengthen protections and safety
 
-**We're building something cool together. Let's do it right.** ✨
+Material changes will be announced publicly with community notification.
+
+---
+
+## Related Policies
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute
+- [SECURITY.md](SECURITY.md) — Security and vulnerability reporting
+- [README.md](README.md) — Project overview
+
+---
+
+## Summary
+
+VEDA Runtime values:
+- **Professionalism** — Technical rigor and respectful communication
+- **Security awareness** — Responsible vulnerability handling
+- **Constructive collaboration** — Focus on ideas, not individuals
+- **Good faith participation** — Honest, intentional engagement
+- **Inclusive community** — Welcoming to all backgrounds and experience levels
+
+Contributors are expected to help maintain a constructive, safe, and operationally secure environment.
+
+---
+
+## Contact
+
+For Code of Conduct concerns:
+- **Report violations:** shivam.shrivastave05@gmail.com
+- **General questions:** [GitHub Discussions](https://github.com/shivamz01/VEDARuntime/discussions)
+
+For security issues:
+- **Use SECURITY.md** for responsible disclosure
 
 ---
 
 _Last updated: 2026-05-15_
-_Version: 1.0_
+_Version: 1.1_
 _Maintainer: Shivam Shrivastav_
