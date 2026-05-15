@@ -4,7 +4,7 @@
 
 **⚠️ DO NOT open a public GitHub issue for security vulnerabilities.**
 
-If you discover a security vulnerability in VEDA Runtime, please report it **privately** to help us fix it before public disclosure.
+If you discover a security vulnerability in VEDA Runtime, please report it **privately** so it can be investigated and mitigated before public disclosure.
 
 ---
 
@@ -18,22 +18,22 @@ If you discover a security vulnerability in VEDA Runtime, please report it **pri
 
 ### What to Include
 
-```
-VULNERABILITY REPORT
-====================
+Please provide as much relevant information as possible:
 
+```
 1. TITLE
-   Brief, descriptive title (e.g., "HMAC Validation Bypass in Audit Ledger")
+   Brief, descriptive title
+   (e.g., "HMAC Validation Bypass in Audit Ledger")
 
 2. SEVERITY
-   - Critical (system-wide breach, no workaround)
-   - High (major feature broken, significant data at risk)
-   - Medium (limited impact, workaround available)
-   - Low (minor issue, theoretical risk)
+   - Critical: Remote execution, system-wide breach, no workaround
+   - High: Major security boundary bypass or significant data exposure
+   - Medium: Limited impact or constrained exploitation
+   - Low: Minor weakness or theoretical issue
 
 3. AFFECTED VERSIONS
-   - Which versions of VEDA Runtime are vulnerable?
-   - Example: "v1.0.0 and v1.1.0, but not v1.2.0+"
+   Which versions are vulnerable?
+   (e.g., "v1.0.0 and v1.1.0, but not v1.2.0+")
 
 4. AFFECTED COMPONENTS
    - audit/
@@ -44,134 +44,138 @@ VULNERABILITY REPORT
    - Other: ___
 
 5. DESCRIPTION
-   What is the vulnerability? Explain:
-   - What the issue is
-   - How it could be exploited
-   - What an attacker could do
-   - What a user could accidentally do
+   What is the vulnerability and how could it be exploited?
 
 6. IMPACT
    - Who is affected? (Free tier? Pro tier? Both?)
    - What data/systems are at risk?
-   - Can it affect multiple users? How?
-   - Are there privacy implications?
+   - Can it affect multiple users?
 
-7. REPRODUCTION
-   Step-by-step to reproduce (if safe):
-   
+7. REPRODUCTION STEPS
+   Step-by-step to reproduce (if safe to disclose):
    1. [Step 1]
    2. [Step 2]
-   3. [Result]
-   
-   OR
-   
-   "Code of Conduct requires I don't publish reproduction steps
-    but I can discuss privately via video call if needed"
+   3. [Expected result vs actual]
 
 8. PROOF OF CONCEPT
-   - Minimal code example (if applicable)
-   - Or describe conceptually
-   - Do NOT include actual exploit code unless necessary
+   Minimal safe example, or describe conceptually
+   (Do NOT include full exploit code unless necessary)
 
-9. SUGGESTED FIX (OPTIONAL)
-   - If you have ideas for fixing it, share them
-   - We may or may not use your suggestion
-   - Not required to report
+9. SUGGESTED FIX (Optional)
+   If you have remediation ideas, share them
 
 10. YOUR CONTACT INFO
     - Name (can be anonymous)
     - Email
     - GitHub username (optional)
     - Preferred contact method
-
-11. TIMELINE EXPECTATIONS
-    - When did you discover this?
-    - Do you plan to disclose publicly? When?
-    - Are you working with other researchers?
-    - Do you want public credit?
 ```
+
+---
+
+## Severity Guidelines
+
+| Severity | Description |
+|----------|-------------|
+| **Critical** | Remote code execution, system-wide compromise, widespread exposure, no workaround |
+| **High** | Significant security boundary bypass, major data exposure, significant functionality compromise |
+| **Medium** | Limited scope, constrained exploitation, workaround available |
+| **Low** | Minor weakness, theoretical issue, minimal real-world impact |
+
+Severity may be reassessed during investigation.
 
 ---
 
 ## Our Commitment
 
-### Timeline
+### Response Timeline
 
 | When | What We Do |
 |------|-----------|
-| **Within 24 hours** | Acknowledge receipt of report |
-| **Within 48 hours** | Initial assessment of severity |
-| **Within 7 days** | Plan for fix or workaround |
-| **Within 30 days** | Release patch (if possible) |
-| **After patch** | Coordinated public disclosure |
+| **24-48 hours** | Acknowledge receipt of report |
+| **7 days** | Initial assessment and severity confirmation |
+| **As feasible** | Develop mitigation or remediation plan |
+| **After patch released** | Coordinated public disclosure if appropriate |
+
+**Note:** These are best-effort targets, not guarantees. Complex issues may require additional time.
 
 ### Confidentiality
 
 ✅ **We will:**
 - Keep your report confidential
-- Not share details publicly until you agree
 - Protect your identity if requested
-- Credit you in security advisory (if you want)
+- Not share details publicly until fix is released
+- Credit you in security advisory (if you authorize)
 
 ❌ **We won't:**
-- Publicly shame the researcher
+- Publicly shame researchers
 - Demand exclusive access to vulnerabilities
-- Ignore your report
-- Sit on fixes indefinitely
-
-### Scope of Vulnerability Handling
-
-**We take seriously:**
-- ✅ Authentication/authorization bypasses
-- ✅ Cryptographic weaknesses
-- ✅ Data exposure or leakage
-- ✅ Code execution vulnerabilities
-- ✅ Denial of service attacks
-- ✅ Privilege escalation
-- ✅ Audit log tampering
-
-**We may consider out of scope:**
-- ❌ Social engineering attacks (not a code vulnerability)
-- ❌ Physical security issues
-- ❌ Vulnerabilities in dependencies (report to those projects)
-- ❌ Vulnerabilities that require admin access you shouldn't have
-- ❌ Theoretical vulnerabilities with no proof of concept
+- Ignore reports
+- Delay patches indefinitely
 
 ---
 
 ## Responsible Disclosure
 
-### What We Ask Of You
+### What We Expect
 
 **DO:**
-- ✅ Give us reasonable time to fix (30-90 days)
+- ✅ Give us reasonable time to fix (30-90 days default)
 - ✅ Communicate professionally
-- ✅ Report only to us (not public, not other projects)
+- ✅ Report only to us initially
 - ✅ Keep details confidential during embargo
 - ✅ Help us understand the issue
-- ✅ Suggest a fix if you have one
 
 **DON'T:**
 - ❌ Publicly disclose before patch released
 - ❌ Test on systems you don't own/control
 - ❌ Access data you shouldn't have
-- ❌ Demand payment or threats
-- ❌ Sell vulnerability to others
-- ❌ Report the same vulnerability to multiple projects
+- ❌ Demand payment or threaten disclosure
+- ❌ Sell vulnerability to other parties
+- ❌ Report to multiple projects simultaneously
 
 ### Embargo Period
 
 **Default:** 90 days from report submission
+
+**Researcher can request shorter period if:**
+- Vulnerability is already public
+- You have proof others know
+- 30 days minimum
 
 **We may request extension if:**
 - Major patch in progress
 - Coordination with other projects needed
 - Release cycle timing
 
-**You can request shorter period if:**
-- Vulnerability is already public
-- You have proof others know
-- 30 days minimum
+---
+
+## Security Scope
+
+### In Scope
+
+- Authentication/authorization bypass
+- Cryptographic weaknesses
+- Signature validation flaws
+- Replay protection bypass
+- Code injection (command, shell, SQL)
+- Path traversal attacks
+- Sandbox escape
+- Audit integrity violations
+- Data exposure or leakage
+- Governance boundary bypass
+
+### Out of Scope
+
+- Social engineering attacks
+- Physical security issues
+- Vulnerabilities requiring privileged access already granted
+- Issues in unsupported third-party dependencies
+- Purely theoretical issues with no realistic impact
+- Missing HTTP security headers
+- Clickjacking or UI-based attacks
+
+**Scope decisions may vary based on context and severity.**
 
 ---
 
@@ -179,48 +183,10 @@ VULNERABILITY REPORT
 
 | Version | Status | Security Updates |
 |---------|--------|------------------|
-| **1.x (current)** | Active | Yes, within 30 days |
-| **0.x** | End of Life | No updates |
+| **1.x (current)** | Active | Yes, within 30 days when feasible |
+| **0.x** | End of Life | Best-effort only |
 
----
-
-## Security Best Practices for Users
-
-### Free Tier
-
-- ✅ Run `npm audit` regularly
-- ✅ Keep Node.js updated
-- ✅ Use `VEDA_HMAC_KEY` in production
-- ✅ Don't hardcode secrets in code
-- ✅ Run behind firewall/reverse proxy
-- ✅ Review audit ledger regularly
-
-### Pro Tier
-
-- ✅ All Free practices
-- ✅ Use Supabase Row Level Security
-- ✅ Rotate `VEDA_LICENSE_KEY` regularly
-- ✅ Monitor `audit_ledger` table for tampering
-- ✅ Enable Supabase backups
-- ✅ Use strong Supabase passwords
-- ✅ Restrict service role key access
-
-### General
-
-- ✅ Keep dependencies updated
-- ✅ Monitor GitHub security advisories
-- ✅ Subscribe to release notifications
-- ✅ Report suspicious behavior
-- ✅ Use security headers in API calls
-- ✅ Enable GitHub's security scanning
-
----
-
-## Known Vulnerabilities
-
-Currently **no known unpatched vulnerabilities**.
-
-Check [GitHub Security Advisories](https://github.com/shivamz01/VEDARuntime/security/advisories) for details.
+Users are strongly encouraged to upgrade to the latest stable release.
 
 ---
 
@@ -246,8 +212,8 @@ VEDA Runtime includes:
 - Legal compliance gates
 - Budget controls
 
-### Audit & Observability
-- Immutable ledger with HMAC chains
+### Audit & Traceability
+- HMAC-chained append-only audit ledger
 - Tamper-evident trace spans
 - Readback verification
 - Rollback checkpoints
@@ -266,30 +232,49 @@ We test for:
 - ✅ Input validation bypass
 - ✅ Authentication bypass
 - ✅ Signature forgery
-- ✅ HMAC collision
-- ✅ Nonce reuse
+- ✅ HMAC collision and tampering
+- ✅ Nonce replay attacks
 - ✅ Shell injection
 - ✅ Path traversal
 - ✅ Audit log tampering
 - ✅ Rollback circumvention
 - ✅ Governance gate bypass
 
-We don't:
-- ❌ Run continuous automated testing (yet)
-- ❌ Have 3rd party security audits (yet)
-- ❌ Have bug bounty program (yet)
+We currently do NOT claim:
+- ❌ Formal verification
+- ❌ Continuous external auditing
+- ❌ Third-party penetration testing
+- ❌ Bug bounty program (yet)
 
 ---
 
-## Patch Release Process
+## Security Best Practices for Users
 
-When a security patch is released:
+### Free Tier
+- Run `npm audit` regularly
+- Keep Node.js updated to latest stable
+- Use `VEDA_HMAC_KEY` in production
+- Don't hardcode secrets in code
+- Run behind firewall/reverse proxy
+- Review audit ledger regularly
 
-1. **Security Advisory** posted to GitHub
-2. **Email notification** sent to users (if applicable)
-3. **Changelog entry** documents the fix
-4. **Version bump** indicates patch level
-5. **Public announcement** after embargo ends
+### Pro Tier
+- All Free practices above
+- Use Supabase Row Level Security
+- Rotate `VEDA_LICENSE_KEY` regularly
+- Monitor `audit_ledger` table for tampering
+- Enable Supabase automated backups
+- Use strong Supabase passwords
+- Restrict service role key access
+- Enable Supabase audit logs
+
+### General
+- Keep all dependencies updated
+- Monitor GitHub security advisories
+- Subscribe to release notifications
+- Run `npm audit` before deployments
+- Use security headers in API calls
+- Enable GitHub's security scanning
 
 ---
 
@@ -301,31 +286,103 @@ When a security patch is released:
 npm audit
 ```
 
-Checks for known vulnerabilities in dependencies.
+### Policy
+- ✅ We update dependencies monthly (minimum)
+- ✅ We apply critical patches immediately
+- ✅ We monitor GitHub security advisories
+- ✅ We test before updating major versions
 
-### Report Dependency Vulnerabilities
-
-If you find a vulnerability in a dependency:
-1. Check if it's already reported to that project
+### If You Find a Dependency Vulnerability
+1. Check if already reported to that project
 2. Report to the dependency maintainers
 3. Optionally CC us for context
 
-### Policy
+---
 
-- ✅ We update dependencies monthly (minimum)
-- ✅ We apply critical patches immediately
-- ✅ We monitor security advisories
-- ✅ We test before updating major versions
+## Patch & Advisory Process
+
+When vulnerabilities are confirmed:
+
+1. **Investigate** and validate the report
+2. **Develop** mitigation or remediation
+3. **Release** patched version
+4. **Publish** security advisory (if appropriate)
+
+### Public Advisory includes:
+- Affected versions
+- Severity rating
+- Vulnerability description
+- Impact assessment
+- Upgrade/remediation guidance
+- Researcher attribution (if approved)
+
+### Disclosure Timeline Example
+```
+Monday 9am    — Vulnerability reported
+Monday 6pm    — Initial assessment complete
+Wednesday     — Fix in progress
+Friday        — Patch released (v1.1.1)
+Friday pm     — Security advisory published
+Monday        — Public disclosure/blog post
+```
+
+---
+
+## Researcher Recognition
+
+Researchers who disclose responsibly may be credited in:
+- Security advisories
+- Release notes
+- Changelog
+- GitHub security page
+
+Recognition is optional and can be declined.
+
+---
+
+## FAQ
+
+**Q: How quickly will you respond?**
+A: Within 24-48 hours typically, but during busy periods may take longer. We'll acknowledge receipt and provide initial assessment within 7 days.
+
+**Q: What if you don't respond?**
+A: Email again or contact via GitHub with context. If still no response after 14 days, you may contact GitHub Security directly.
+
+**Q: Can I test on a live server?**
+A: No. Only test on systems you control. If you need a test environment, ask us.
+
+**Q: Will you patch old versions?**
+A: We patch current releases. Older unsupported versions: best-effort only. We strongly recommend upgrading to the latest version.
+
+**Q: Do you have a bug bounty program?**
+A: Not currently. We credit all responsible researchers in advisories. A formal bug bounty program may launch in the future.
+
+**Q: Can I publish about the vulnerability after the fix?**
+A: Yes, after we release a patch and publicly announce it. Please coordinate timing with us.
+
+**Q: What if someone else finds the same vulnerability?**
+A: We credit all independent discoverers in the advisory unless explicitly requested otherwise.
+
+**Q: Is there a specific disclosure timeline I should follow?**
+A: Default is 90 days. If vulnerability becomes public or urgent, we can accelerate (minimum 30 days). Discuss with us.
+
+---
+
+## Known Vulnerabilities
+
+Currently **no known unpatched vulnerabilities**.
+
+Check [GitHub Security Advisories](https://github.com/shivamz01/VEDARuntime/security/advisories) for details.
 
 ---
 
 ## Third-Party Security Tools
 
 We recommend:
-- **npm audit** — Check dependencies
-- **OWASP ZAP** — Web vulnerability scanner
-- **Snyk** — Continuous vulnerability monitoring
-- **GitHub security scanning** — Code scanning
+- **npm audit** — Check dependencies for known vulnerabilities
+- **GitHub security scanning** — Code scanning and secret detection
+- **Snyk** — Continuous vulnerability monitoring (optional)
+- **OWASP ZAP** — Web vulnerability scanner (optional)
 
 ---
 
@@ -335,119 +392,65 @@ We recommend:
 
 **Email:** shivam.shrivastave05@gmail.com
 
-**Response time:** Best effort within 24-48 hours
+**Response time:** Best-effort 24-48 hours
 
-### Escalation
+### For Different Issues
 
-For urgent issues:
-- Email with `[URGENT]` in subject
-- Include contact number for callback (optional)
+| Type | Where |
+|------|-------|
+| **Security vulnerability** | Email (private) |
+| **Security questions** | Email (private) |
+| **General questions** | [GitHub Discussions](https://github.com/shivamz01/VEDARuntime/discussions) |
+| **Bug reports (non-security)** | [GitHub Issues](https://github.com/shivamz01/VEDARuntime/issues) |
 
 ---
 
 ## Transparency & Disclosure
 
-### What We Publish
+### What We Publish After Patch
 
-- ✅ Security advisories (after patch released)
+- ✅ Security advisories
 - ✅ CVE IDs (for critical issues)
 - ✅ Vulnerability descriptions
 - ✅ Affected versions
 - ✅ Fix details
 - ✅ Researcher credit (if authorized)
 
-### Timeline Example
+### What We Keep Confidential Until Patch
 
-```
-Monday 9am    — Vulnerability reported
-Monday 6pm    — Initial assessment
-Tuesday       — Fix in progress
-Thursday      — Patch released (v1.1.1)
-Thursday pm   — Security advisory published
-Friday        — Public disclosure on blog
-```
-
----
-
-## FAQ
-
-**Q: Should I report to GitHub security team?**
-A: No, report directly to us via email first. If we don't respond, then contact GitHub.
-
-**Q: Can I test the vulnerability on a live server?**
-A: No. Only test on systems you control. If you need a test instance, ask us.
-
-**Q: What if I don't trust you to fix it?**
-A: We can offer:
-- Weekly updates on progress
-- Video call explanation of fix
-- Review of patch before release
-- Other accommodations
-
-**Q: Do you have a bug bounty program?**
-A: Not yet, but we credit researchers in advisories. Plan to launch bounty program in 2026.
-
-**Q: What if someone else finds the same vulnerability?**
-A: We credit all independent discoverers unless explicitly requested otherwise.
-
-**Q: Can I publish about the vulnerability after patch?**
-A: Yes, after public disclosure. We ask you coordinate with us for timing.
-
-**Q: What about vulnerabilities in older versions?**
-A: We backport critical patches to recent versions only. Upgrade to latest version.
-
----
-
-## Support & Questions
-
-- **Security questions:** shivam.shrivastave05@gmail.com
-- **General questions:** [GitHub Discussions](https://github.com/shivamz01/VEDARuntime/discussions)
-- **Bug reports:** [GitHub Issues](https://github.com/shivamz01/VEDARuntime/issues)
-
----
-
-## Security Advisory Format
-
-When we publish advisories, they include:
-
-```markdown
-# Security Advisory: [Issue Title]
-
-**CVSS Score:** 7.5 (High)
-**Affected Versions:** 1.0.0 - 1.1.0
-**Fixed In:** v1.1.1
-**Published:** 2026-05-15
-
-## Summary
-[What is the vulnerability]
-
-## Impact
-[Who is affected and how]
-
-## Remediation
-[How to fix / upgrade]
-
-## Credits
-[Researcher names if authorized]
-```
+- ✅ Detailed reproduction steps
+- ✅ Proof of concept code
+- ✅ Reporter identity (if requested)
+- ✅ Patch details (until release)
 
 ---
 
 ## Related Resources
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute
+- [README.md](README.md) — Product overview and features
+- [CONTRIBUTING.md](CONTRIBUTING.md) — How to contribute code
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Community standards
-- [README.md](README.md) — Product overview
-- [OWASP Security Guidelines](https://owasp.org/www-project-web-security-testing-guide/)
+- [GitHub Security Advisories](https://github.com/shivamz01/VEDARuntime/security/advisories)
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+
+---
+
+## Summary
+
+VEDA Runtime prioritizes:
+- **Responsible disclosure** — Private, coordinated vulnerability handling
+- **Transparent communication** — Clear timelines and process
+- **User security** — Practical guidance and best practices
+- **Researcher respect** — Professional, confidential handling with proper attribution
 
 ---
 
 **Thank you for helping keep VEDA Runtime secure.** 🛡️
 
-We appreciate your responsible disclosure and partnership in building trustworthy AI execution infrastructure.
+We appreciate responsible disclosure and your partnership in building trustworthy AI execution infrastructure.
 
 ---
 
 _Last updated: 2026-05-15_
-_Version: 1.0_
+_Version: 1.1_
 _Maintainer: Shivam Shrivastav_
