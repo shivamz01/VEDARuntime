@@ -7,13 +7,31 @@ This file tracks open bugs, confirmed limitations, and deferred fixes in VEDA Ru
 ## Status Snapshot
 - **Previously logged bugs:** 3
 - **Confirmed fixed before this pass:** 3
-- **Fixed in current pass:** 3
+- **Fixed in current pass:** 6
 - **Still open after current pass:** 0
 - **Current open bugs tracked here:** 0
 
 ---
 
-## Open Issues
+## Open Issues 05-16-2026
+
+### (None)
+
+---
+
+## Resolved Issues
+
+### 1. [Logic Drift] Circular SPE Dependency
+*   **Status:** FIXED — 2026-05-15
+*   **Fix:** Introduced `REPAIR_BYPASS` token logic for automated `--fixbug` loops.
+
+### 2. [Registry Mismatch] Phantom Engineering Orchestrator
+*   **Status:** FIXED — 2026-05-15
+*   **Fix:** Updated all routing to use `micro-saas-architect-v1.3`.
+
+### 3. [Security] ZTE Co-sign Bypass
+*   **Status:** FIXED — 2026-05-15
+*   **Fix:** Enforced row-level security on `audit_ledger` requiring `eval_co_signed: true`.
 
 ### KI-001 — Supabase writes not yet wired in all layers
 **Severity:** Medium  

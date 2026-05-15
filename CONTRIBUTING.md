@@ -1,157 +1,213 @@
+````md
 # Contributing to VEDA Runtime
 
-Thank you for your interest in contributing to VEDA Runtime! We welcome contributions from developers, security researchers, and users who want to help make deterministic AI execution more accessible and robust.
+Thank you for your interest in contributing to VEDA Runtime.
+
+VEDA Runtime is a security-focused AI execution runtime designed for constrained orchestration, auditable workflows, and governance-aware execution pipelines.
+
+Before contributing, read:
+- [README.md](README.md)
+- [docs/setup/supabase-pro-setup.md](docs/setup/supabase-pro-setup.md)
 
 ---
 
-## What is VEDA Runtime?
+# Project Scope
 
-VEDA Runtime is an **enterprise-grade AI execution kernel** for safe, deterministic, and auditable LLM agent workflows. It provides:
+VEDA Runtime focuses on:
 
-- **Deterministic orchestration** — predictable execution paths
-- **Cryptographic audit ledgers** — tamper-evident execution records
-- **Rollback checkpoints** — recovery from failures
-- **Strict governance** — Zero Trust, Security Policy, Budget, and Legal gates
+- Constrained orchestration for LLM workflows
+- Audit-oriented execution tracing
+- Governance-aware execution pipelines
+- Rollback and recovery primitives
+- Sandbox-based execution boundaries
 
-Before contributing, please read:
-- [README.md](README.md) — Full project overview
-- [docs/setup/supabase-pro-setup.md](docs/setup/supabase-pro-setup.md) — Pro tier setup
+VEDA Runtime is currently NOT:
+
+- A general AGI framework
+- A self-modifying autonomous system
+- A replacement for Kubernetes or workflow schedulers
+- Guaranteed deterministic at model-token level
+- Certified for regulated production environments
+
+Some subsystems are experimental and may change without notice.
 
 ---
 
-## Ways to Contribute
+# Stability Matrix
 
-### 1. **Report Bugs** 🐛
+| Component | Status |
+|---|---|
+| Runtime Kernel | Beta |
+| Audit Ledger | Beta |
+| Rollback Engine | Experimental |
+| Context Governance | Experimental |
+| Sandbox Engine | Beta |
+| Supabase Pro Features | Experimental |
+| Local LLM Support | Experimental |
 
-Found an issue? Help us fix it:
+---
 
-1. **Check existing issues** — Search [Issues](https://github.com/shivamz01/VEDARuntime/issues) to avoid duplicates
-2. **Provide details:**
-   - VEDA Runtime version (`npm run status`)
-   - Node.js version (`node --version`)
-   - Execution profile (local_safe, standard, pro_cloud)
-   - Steps to reproduce
-   - Expected behavior
-   - Actual behavior
-   - Error message or stack trace
-   - Environment variables (redacted)
+# Compatibility Matrix
 
-3. **Example:**
-   ```
-   Title: NONCE_REPLAY error on retry with same handoff
-   
-   Version: v1.1.0
-   Node.js: 20.11.0
-   Profile: standard
-   
-   Reproduction:
-   1. Send valid handoff with nonce X
-   2. Receive 200 response
-   3. Retry same handoff with nonce X
-   4. Receive NONCE_REPLAY error
-   
-   Expected: Should either accept or reject cleanly
-   Actual: Replay detection blocks valid retry
-   ```
+| Component | Status |
+|---|---|
+| Node.js 20+ | Supported |
+| Linux | Tested |
+| Windows | Partial |
+| macOS | Limited Testing |
+| SQLite | Supported |
+| Supabase | Supported |
+| Local LLM Providers | Experimental |
 
-### 2. **Suggest Features** 💡
+---
 
-Have an idea? We'd love to hear it:
+# Ways to Contribute
 
-1. **Check open issues** — Look for existing feature requests
-2. **Describe the use case:**
-   - What problem does it solve?
-   - Who benefits? (security team, developers, auditors, etc.)
-   - How would it work?
-   - Any alternatives you considered?
+## 1. Report Bugs
 
-3. **Example:**
-   ```
-   Title: Add webhook notifications for audit ledger changes
-   
-   Use case: Security teams need real-time alerts when execution logs are written
-   
-   Implementation idea:
-   - Add optional webhook URL to governance config
-   - POST to webhook on every audit span write
-   - Include span hash for verification
-   - Retry with exponential backoff if webhook fails
-   
-   Why useful: Enables real-time threat detection without polling
-   ```
+Before opening an issue:
 
-### 3. **Improve Documentation** 📖
+1. Search existing issues
+2. Verify the issue on the latest version
+3. Collect reproducible steps
 
-Documentation is critical for safety. Contributions include:
+Please include:
 
-- **Fix typos or grammar** in README, docs, or comments
-- **Clarify confusing sections** with examples
-- **Add troubleshooting guides** for common issues
-- **Write setup tutorials** for different platforms
-- **Create examples** for Pro tier features
-- **Translate docs** to other languages
+- Runtime version (`npm run status`)
+- Node.js version
+- Execution profile
+- Expected behavior
+- Actual behavior
+- Logs or stack traces
+- Redacted environment details
 
-**Documentation structure:**
+Example:
+
+```text
+Title: NONCE_REPLAY error during retry
+
+Version: v1.1.0
+Node.js: 20.11.0
+Profile: standard
+
+Reproduction:
+1. Send valid handoff with nonce X
+2. Receive 200 response
+3. Retry same handoff
+4. Receive NONCE_REPLAY
+
+Expected:
+Replay handling should fail consistently and predictably.
+
+Actual:
+Replay detection blocks retry path unexpectedly.
+````
+
+---
+
+## 2. Suggest Features
+
+Feature requests should describe:
+
+* Problem being solved
+* Operational benefit
+* Proposed implementation
+* Security considerations
+* Alternative approaches considered
+
+Example:
+
+```text
+Title: Webhook notifications for audit ledger events
+
+Use case:
+Security teams need near real-time visibility into execution ledger writes.
+
+Implementation:
+- Optional webhook configuration
+- Signed event payloads
+- Retry with exponential backoff
+- Failure isolation from runtime execution
 ```
+
+---
+
+## 3. Improve Documentation
+
+Documentation contributions are highly valuable.
+
+Examples:
+
+* Clarify setup steps
+* Improve troubleshooting
+* Add architecture explanations
+* Add operational examples
+* Fix inaccuracies or outdated instructions
+
+Documentation structure:
+
+```text
 docs/
-├── setup/              — Installation & configuration
-├── guides/             — How-to guides
-├── architecture/       — Design & internals
-├── security/           — Security policies
-└── examples/           — Worked examples
+├── setup/
+├── guides/
+├── architecture/
+├── security/
+└── examples/
 ```
-
-### 4. **Write Code** 💻
-
-Code contributions should follow our **Proof Bar**:
-
-Every feature claim must pass the full chain:
-```
-input → validation → nonce → signature → context governance 
-→ governance gates → rollback checkpoint → sandbox execution 
-→ audit span → ledger append → readback verification → output
-```
-
-**Before coding:**
-- Comment on the issue: "I'd like to work on this"
-- Wait for maintainer approval
-- Discuss approach if it's a major change
-
-**Feature types:**
-
-| Type | Example | Proof Requirement |
-|------|---------|-------------------|
-| **Free Tier** | New sandbox rule, Context Governor enhancement | Must pass `npm run demo:free` |
-| **Pro Tier** | New Supabase adapter, license gate enhancement | Must pass `npm run pro:verify` |
-| **Documentation** | Examples, guides, API docs | N/A |
-| **Tests** | New contract tests, edge cases | Must pass `npm run test` |
-
-### 5. **Security Research** 🔐
-
-Found a security issue? Please report responsibly:
-
-1. **Do NOT open a public issue** for security vulnerabilities
-2. **Email us** at `security@vedaruntime.dev` (or the maintainer's email) with:
-   - Vulnerability description
-   - Impact assessment
-   - Proof of concept (if applicable)
-   - Suggested fix (optional)
-3. **Allow 90 days** for patch development and disclosure coordination
-
-Thank you for helping us keep VEDA Runtime secure!
 
 ---
 
-## Development Setup
+## 4. Write Code
 
-### Prerequisites
+All code contributions should align with the runtime proof pipeline.
+
+Proof pipeline:
+
+```text
+input
+→ schema validation
+→ nonce replay check
+→ signature verification
+→ governance policy enforcement
+→ execution budget validation
+→ rollback checkpoint creation
+→ sandbox execution
+→ audit span creation
+→ ledger append
+→ integrity verification
+→ output emission
+```
+
+Before major work:
+
+* Open or reference an issue
+* Discuss architecture-impacting changes
+* Wait for maintainer approval
+
+---
+
+# Contribution Categories
+
+| Type          | Example                             | Required Validation     |
+| ------------- | ----------------------------------- | ----------------------- |
+| Runtime       | Scheduler, sandbox, orchestration   | `npm run test`          |
+| Security      | Governance, validation, nonce logic | `npm run release:check` |
+| Pro Features  | Supabase integrations               | `npm run pro:verify`    |
+| Documentation | Guides, API docs                    | Documentation review    |
+| Tests         | Edge cases, contract tests          | `npm run test`          |
+
+---
+
+# Development Setup
+
+## Requirements
 
 ```bash
 node --version  # >= 20
 npm --version   # >= 9
 ```
 
-### Clone & Install
+## Clone Repository
 
 ```bash
 git clone https://github.com/shivamz01/VEDARuntime.git
@@ -159,348 +215,292 @@ cd VEDARuntime
 npm install
 ```
 
-### Build & Test
+## Validation Commands
 
 ```bash
-# Build all workspaces
 npm run build
-
-# Run contract tests
 npm run test
-
-# Run Free proof demo
 npm run demo:free
-
-# Run release gate (comprehensive check)
 npm run release:check
 ```
 
-### Project Structure
+---
 
-```
+# Repository Structure
+
+```text
 VEDARuntime/
 ├── packages/
-│   ├── shared/        — Canonical types & constants
-│   ├── audit/         — Audit ledger & nonce registry
-│   ├── sandbox/       — Shell policy engine
-│   ├── runtime/       — Core execution kernel
-│   ├── pro/           — Pro tier features
-│   └── bridge-veda/   — Ecosystem bridge
+│   ├── shared/
+│   ├── audit/
+│   ├── sandbox/
+│   ├── runtime/
+│   ├── pro/
+│   └── bridge-veda/
 ├── apps/
-│   ├── api/           — HTTP API surface
-│   └── web/           — Status dashboard
-├── tests/             — Deterministic acceptance tests
-├── examples/          — Demo workflows
-└── docs/              — Documentation
+│   ├── api/
+│   └── web/
+├── tests/
+├── examples/
+└── docs/
 ```
-
-### Key Scripts
-
-| Command | Purpose |
-|---------|---------|
-| `npm run build` | Build all workspaces |
-| `npm run test` | Run contract tests |
-| `npm run demo:free` | Free proof workflow |
-| `npm run demo:paid` | Paid proof workflow (mock) |
-| `npm run pro:verify` | Real Supabase verification |
-| `npm run pipeline:proof` | Full release check |
-| `npm run status` | Runtime status |
 
 ---
 
-## Coding Guidelines
+# Coding Standards
 
-### TypeScript Standards
+## TypeScript
+
+Prefer:
+
+* Explicit typing
+* Documented public APIs
+* Structured errors
+* Small composable modules
+
+Example:
 
 ```typescript
-// ✅ Good: Clear, typed, documented
-/**
- * Validates a HANDOFF_JSON v6.1.1 payload.
- * @throws HandoffValidationError if validation fails
- * @returns Validated and normalized handoff
- */
 export function validateHandoff(
   payload: unknown,
   options: ValidationOptions = {}
 ): ValidatedHandoff {
-  // Implementation
-}
-
-// ❌ Bad: Unclear, any types, no docs
-function validate(x: any): any {
-  // Implementation
+  // implementation
 }
 ```
 
-### Commit Messages
+Avoid:
 
-Follow conventional commits:
+```typescript
+function validate(x: any): any {
+  // implementation
+}
+```
+
+---
+
+# Commit Format
+
+Use conventional commits:
 
 ```bash
-git commit -m "feat(audit): add HMAC-chained span verification
-
-- Implement HMAC-SHA256 chain validation on audit ledger read
-- Add readback verification to proof pipeline
-- Adds 2 new contract tests
-
-Closes #123"
+feat(runtime): add rollback integrity verification
+fix(audit): repair ledger replay validation
+docs(security): clarify nonce lifecycle
 ```
 
-**Format:**
-```
-<type>(<scope>): <subject>
+Types:
 
-<body>
+* feat
+* fix
+* docs
+* test
+* refactor
+* chore
 
-Closes #<issue-number>
-```
+Scopes:
 
-**Types:** `feat`, `fix`, `docs`, `test`, `refactor`, `chore`
+* runtime
+* audit
+* governance
+* sandbox
+* api
+* pro
 
-**Scopes:** `audit`, `sandbox`, `runtime`, `governance`, `api`, `pro`
+---
 
-### Error Handling
+# Error Handling
 
-VEDA uses structured error codes. When adding errors:
+Use structured runtime errors.
+
+Example:
 
 ```typescript
-// In src/errors.ts
 export enum VedaErrorCode {
-  // Existing codes...
-  NEW_ERROR = "NEW_ERROR_NAME",
+  NONCE_REPLAY = "NONCE_REPLAY",
 }
-
-// Usage
-throw new VedaError(
-  VedaErrorCode.NEW_ERROR,
-  "Descriptive message with context"
-);
 ```
 
-### Testing
+Avoid:
 
-Every new feature needs tests:
+* Generic thrown strings
+* Unstructured runtime exceptions
+* Leaking sensitive information in logs
 
-```typescript
-// tests/my-feature.test.ts
-import { expect } from "chai";
-import { myNewFeature } from "../src";
+---
 
-describe("my-feature", () => {
-  it("should do X when given Y input", () => {
-    const result = myNewFeature({ /* ... */ });
-    expect(result).to.equal(expected);
-  });
+# Testing Requirements
 
-  it("should throw error when validation fails", () => {
-    expect(() => myNewFeature(invalid)).to.throw();
-  });
-});
-```
+New features should include:
 
-Run tests:
+* Success-path validation
+* Failure-path validation
+* Edge-case coverage
+* Governance-path coverage where applicable
+
+Run:
+
 ```bash
 npm run test
 ```
 
-### Security Checklist
+---
 
-Before submitting code:
+# Security Checklist
 
-- [ ] No hardcoded secrets or API keys
-- [ ] No `eval()` or dynamic code execution
-- [ ] Input validation on all external data
-- [ ] Error messages don't leak sensitive info
-- [ ] Cryptographic functions use standard libraries
-- [ ] No shell command injection vectors
-- [ ] All dependencies checked: `npm audit`
+Before submitting:
+
+* No hardcoded secrets
+* No unsafe dynamic execution
+* Input validation enforced
+* No sensitive data leakage
+* Standard cryptographic libraries only
+* No shell injection vectors
+* `npm audit` reviewed
 
 ---
 
-## Pull Request Process
+# Pull Request Process
 
-### 1. Fork & Branch
+## Branch Naming
 
-```bash
-git checkout -b feat/your-feature-name
+```text
+feat/description
+fix/description
+docs/description
+test/description
 ```
 
-**Branch naming:**
-- `feat/description` — New feature
-- `fix/description` — Bug fix
-- `docs/description` — Documentation
-- `test/description` — Test improvements
+## Before Opening a PR
 
-### 2. Develop & Commit
+Run:
 
 ```bash
 npm run build
 npm run test
-
-git commit -m "feat(scope): description"
 ```
 
-### 3. Keep Up to Date
+Rebase on latest main:
 
 ```bash
 git fetch origin
 git rebase origin/main
 ```
 
-### 4. Push & Open PR
+---
+
+# PR Expectations
+
+PRs should include:
+
+* Problem description
+* Why the change is needed
+* Validation steps
+* Security considerations
+* Test evidence
+
+Large architectural changes may require design discussion before merge.
+
+---
+
+# Release Process
+
+Release validation includes:
 
 ```bash
-git push origin feat/your-feature-name
+npm run release:check
 ```
 
-Then open a PR on GitHub with:
+Typical release flow:
 
-**PR Title:**
-```
-feat(scope): short description
-```
-
-**PR Description:**
-```markdown
-## What does this PR do?
-Brief explanation of the change.
-
-## Why?
-What problem does it solve? Why now?
-
-## How to test?
-Steps to verify the change works.
-
-## Checklist
-- [ ] Tests added/updated
-- [ ] Documentation updated
-- [ ] No security issues
-- [ ] Follows coding guidelines
-- [ ] Builds successfully (`npm run build`)
-- [ ] All tests pass (`npm run test`)
-
-Closes #<issue-number>
-```
-
-### 5. Review & Feedback
-
-- Maintainers will review within 5 business days
-- Address feedback in follow-up commits (don't squash)
-- Push changes to same branch
-- Request re-review when ready
-
-### 6. Merge
-
-Once approved:
-- Maintainers will squash & merge to `main`
-- Your changes deploy in the next release
+1. Validation passes
+2. Version updated
+3. Changelog generated
+4. GitHub release published
+5. npm package published
 
 ---
 
-## Release Process
+# Security Reporting
 
-You don't need to do this, but here's how releases work:
+Do NOT report security vulnerabilities publicly.
 
-1. **Maintainers run:**
-   ```bash
-   npm run release:check
-   ```
+Preferred channels:
 
-2. **If everything passes:**
-   - Bump version in `package.json`
-   - Create GitHub release with changelog
-   - Publish to npm
+* GitHub Security Advisories
+* Maintainer contact email
 
-3. **You'll be credited in:**
-   - GitHub release notes
-   - Changelog
-   - CREDITS.md (if applicable)
+Include:
+
+* Description
+* Reproduction steps
+* Impact assessment
+* Suggested remediation if available
 
 ---
 
-## Code of Conduct
+# Code of Conduct
 
-We're committed to a welcoming, inclusive community:
+Expected behavior:
 
-- **Be respectful** — Disagreements are healthy; attacks are not
-- **Be helpful** — New contributors are always welcome
-- **Be honest** — Admit mistakes; learn from feedback
-- **Be secure-minded** — Security is a shared responsibility
+* Professional communication
+* Respectful technical disagreement
+* Honest reporting
+* Security-conscious development
 
 Unacceptable behavior:
-- Harassment, discrimination, or abuse
-- Spam or self-promotion
-- Sharing others' code without credit
-- Endangering security intentionally
 
-**If someone violates this:** Email maintainers with details.
-
----
-
-## Getting Help
-
-### Questions?
-
-- **Usage questions** → Open an issue with `[question]` tag
-- **Technical help** → Discussions → Q&A category
-- **How-to questions** → Check docs/ first, then ask
-
-### Resources
-
-- [VEDA Runtime README](README.md)
-- [Architecture Docs](docs/architecture/)
-- [Security Policy](SECURITY.md)
-- [Troubleshooting](TROUBLESHOOTING.md) (if available)
-- [Issues](https://github.com/shivamz01/VEDARuntime/issues)
-- [Discussions](https://github.com/shivamz01/VEDARuntime/discussions)
+* Harassment
+* Abuse
+* Deliberate security harm
+* Spam
+* Credential exposure
 
 ---
 
-## Credit & Recognition
+# Getting Help
 
-Contributors are recognized in:
+Resources:
 
-1. **GitHub** — Your PR shows your contributions
-2. **Changelog** — Major contributions mentioned in release notes
-3. **CREDITS.md** — Option to be listed in credits file
+* [README.md](README.md)
+* [Architecture Docs](docs/architecture/)
+* [Issues](https://github.com/shivamz01/VEDARuntime/issues)
+* [Discussions](https://github.com/shivamz01/VEDARuntime/discussions)
 
-For major contributions (features, security fixes, large docs):
-- You can request credit
-- We'll add you to maintainers or list your GitHub profile
+Use:
 
----
-
-## Questions Before You Start?
-
-**Ask in these places:**
-
-1. **GitHub Issues** — For feature/bug discussion
-2. **GitHub Discussions** — For questions & ideas
-3. **Email** — For security issues only
-
-**Don't:**
-- Open a PR without discussing first (for major changes)
-- Submit code with hardcoded secrets
-- Report security issues publicly
+* Issues → bugs/features
+* Discussions → questions/design ideas
 
 ---
 
-## Thank You! 🙏
+# Recognition
 
-Every contribution makes VEDA Runtime safer and more accessible. Whether you're fixing typos, writing docs, reporting bugs, or building features — **you matter**.
+Contributors may be recognized through:
 
-Welcome to the community! 🚀
-
----
-
-**Need to reach us?**
-- **Issues/Features:** [GitHub Issues](https://github.com/shivamz01/VEDARuntime/issues)
-- **Questions:** [GitHub Discussions](https://github.com/shivamz01/VEDARuntime/discussions)
-- **Security:** security@vedaruntime.dev (or maintainer email)
-
-**Follow us:** [GitHub](https://github.com/shivamz01) | Twitter | Blog
+* GitHub history
+* Release notes
+* Changelog references
+* CREDITS.md
 
 ---
 
-_Last updated: 2026-05-15_
-_Maintainer: Shivam Shrivastav_
+# Maintainer Notes
+
+The project prioritizes:
+
+* Runtime safety
+* Auditability
+* Operational clarity
+* Governance enforcement
+* Reproducible execution behavior
+
+Contributors should prefer incremental, verifiable improvements over large speculative rewrites.
+
+---
+
+Last updated: 2026-05-15
+Maintainer: Shivam Shrivastav
+
+```
+```

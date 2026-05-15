@@ -1,0 +1,11 @@
+-:*.sb-????????-??????
+-:*.tmp
+-:*~.*
+-:.*
+-:desktop.ini
+-:Thumbs.db
+-:~*
+-d:node_modules*
+-d:.git*
+-d:.github*
+-f:*.
